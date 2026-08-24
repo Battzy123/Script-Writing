@@ -132,7 +132,7 @@
     border: 1px solid #333;
     align-items: center;
     flex-wrap: wrap;
-    max-width: 8.27in;
+    max-width: 8.5in;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -147,72 +147,52 @@
   }
   .shortcut-legend { font-size: 0.75rem; color: #aaa; margin-left: auto; }
 
-  #scriptPagesContainer {
-    width: 8.27in;
+  /* Professional Continuous Script Document Container (Celtx / Google Docs Standard) */
+  #scriptContainerWrapper {
+    width: 8.5in;
     margin: 0 auto 40px auto;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-  }
-
-  /* Individual Page Sheet Styling */
-  .script-page {
     background: #ffffff;
     color: #000000;
-    width: 8.27in;
-    min-height: 11.69in;
-    height: auto;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
     border-radius: 2px;
-    position: relative;
-    padding: 1in;
+    padding: 1in 1in 1in 1.5in; /* Standard Screenplay Margins: 1.5" left, 1" others */
     font-family: "Courier Prime", "Courier New", Courier, monospace;
     font-size: 12pt;
     line-height: 1.5;
-  }
-  .script-page div { min-height: 1.5em; outline: none; }
-
-  .script-page::after {
-    content: attr(data-page-num);
-    position: absolute;
-    top: 0.5in;
-    right: 1in;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 9pt;
-    color: #777;
+    min-height: 11in;
   }
 
-  .script-page.title-sheet::after { content: ""; }
-
-  .title-page-block {
-    text-align: center;
-    min-height: 9.3in;
+  #scriptPagesContainer {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 0 !important;
   }
-  .title-page-inner { width: 100%; max-width: 6in; margin: 0 auto; }
-  .title-page-block h2 { font-size: 20pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
-  .title-page-block p { font-size: 12pt; margin: 10px 0; }
 
+  .script-block { min-height: 1.5em; outline: none; margin-bottom: 0; }
+
+  /* Title Page Section */
+  .title-page-container {
+    padding: 2in 0;
+    text-align: center;
+    page-break-after: always;
+    border-bottom: 2px dashed #ccc;
+    margin-bottom: 2in;
+  }
+  .title-page-container h2 { font-size: 20pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
+  .title-page-container p { font-size: 12pt; margin: 10px 0; }
+
+  /* Screenplay Element Formatting */
   .scene-heading {
     font-weight: bold;
     text-transform: uppercase;
     margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    background-color: #dcdcdc;
-    padding: 3px 6px;
-    border-radius: 2px;
+    margin-bottom: 1em;
     letter-spacing: 0.5px;
   }
-  
   .action { margin-bottom: 1em; }
-  .character { text-transform: uppercase; margin-top: 1.2em; margin-left: 38%; margin-bottom: 0; }
-  .parenthetical { margin-left: 30%; margin-right: 30%; margin-bottom: 0; }
-  .dialogue { margin-left: 22%; margin-right: 22%; margin-bottom: 1em; }
-  .transition { text-transform: uppercase; margin-left: 65%; margin-top: 1em; margin-bottom: 1em; }
+  .character { text-transform: uppercase; margin-top: 1.2em; margin-left: 22%; margin-bottom: 0; }
+  .parenthetical { margin-left: 15%; margin-right: 35%; margin-bottom: 0; }
+  .dialogue { margin-left: 10%; margin-right: 15%; margin-bottom: 1em; }
+  .transition { text-transform: uppercase; margin-left: 50%; margin-top: 1.5em; margin-bottom: 1.5em; }
 
   /* Beat Board Corkboard Grid */
   .corkboard-grid {
@@ -268,9 +248,7 @@
     .container { flex-direction: column; overflow-y: auto; }
     aside { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid #2d2d35; padding: 10px; }
     .editor-view, .budget-view, .analytics-view, .beatboard-view { padding: 10px; overflow-y: visible; }
-    #scriptPagesContainer { width: 100% !important; margin: 0 auto; gap: 20px; }
-    .script-page { width: 100% !important; height: auto !important; min-height: 480px; padding: 1rem !important; font-size: 11pt; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    .title-page-block { min-height: 400px !important; }
+    #scriptContainerWrapper { width: 100% !important; margin: 0 auto; padding: 1rem !important; font-size: 11pt; }
     .toolbar { width: 100%; margin-left: 0; margin-right: 0; }
     .shortcut-legend { display: none; }
     header { padding: 8px 10px; }
@@ -282,9 +260,7 @@
     header, .toolbar, nav, aside, .budget-view, .analytics-view, .beatboard-view, .btn { display: none !important; }
     .container { overflow: visible; display: block; }
     .editor-view { padding: 0; overflow: visible; }
-    #scriptPagesContainer { width: 100%; gap: 0; }
-    .script-page { box-shadow: none; margin: 0; page-break-after: always; min-height: 11.69in; }
-    .scene-heading { background-color: transparent !important; padding: 0; }
+    #scriptContainerWrapper { width: 100%; box-shadow: none; margin: 0; padding: 1in; }
   }
 </style>
 </head>
@@ -307,7 +283,7 @@
           <a onclick="exportToPdf()">Export Script (.pdf) <span class="shortcut">PDF</span></a>
           <a onclick="openSyncModal()" style="color:#ff9900; font-weight:bold;">📱 Cloud Sync (Phone/PC)</a>
           <div class="dropdown-divider"></div>
-          <a onclick="promptAddEpisode()">Add Episodes</a>
+          <a onclick="promptAddEpisode()">Add Episode / Act</a>
           <a onclick="promptRenameScript()">Rename Script</a>
           <div class="dropdown-divider"></div>
           <a onclick="clearLocalStorageData()" style="color:#ff6b6b;">Reset / Clear Storage</a>
@@ -390,7 +366,15 @@
       <span class="shortcut-legend"><b>Tab</b>: Format | <b>Enter</b>: New Line</span>
     </div>
     
-    <div id="scriptPagesContainer"></div>
+    <!-- PROFESSIONAL CONTINUOUS SCRIPT CONTAINER -->
+    <div id="scriptContainerWrapper">
+      <div id="titlePageBlock" class="title-page-container script-block" contenteditable="true" data-bid="title-block">
+        <h2>TITLE OF THE SCRIPT</h2>
+        <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
+        <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
+      </div>
+      <div id="scriptPagesContainer"></div>
+    </div>
   </div>
 
   <!-- BEAT BOARD TAB -->
@@ -445,7 +429,7 @@
       </tbody>
     </table>
     
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; flex-wrap:gap; gap:10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; flex-wrap:wrap; gap:10px;">
       <button class="btn btn-accent" onclick="addRow()">+ Add Line Item</button>
       <h3 id="grandTotal" style="margin:0; color:#ff9900; font-size:1rem;">Grand Total: $2,500</h3>
     </div>
@@ -455,7 +439,7 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v2';
+  const STORAGE_KEY = 'free_writing_tool_pro_v3';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
 
@@ -505,30 +489,29 @@
   }
 
   function promptAddEpisode() {
-    const epName = prompt("Enter Episode Name / Number:");
+    const epName = prompt("Enter Episode Name / Act Heading:");
     if (epName) {
       const activeLine = getActiveLine();
-      const div = createBlockElement('scene-heading', 'EPISODE: ' + epName.toUpperCase());
-      if (activeLine && !activeLine.classList.contains('title-page-block')) {
+      const div = createBlockElement('scene-heading', 'ACT: ' + epName.toUpperCase());
+      if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
         activeLine.after(div);
       } else {
-        const firstScriptPage = document.querySelectorAll('.script-page')[1] || document.querySelector('.script-page');
-        firstScriptPage.appendChild(div);
+        document.getElementById('scriptPagesContainer').appendChild(div);
       }
-      paginateScript();
+      updateSceneIndex();
       focusDiv(div);
       autoSave();
     }
   }
 
   function exportToPdf() {
-    const container = document.getElementById('scriptPagesContainer');
+    const container = document.getElementById('scriptContainerWrapper');
     const opt = {
-      margin:       0,
+      margin:       [0.5, 0.5, 0.5, 0.5],
       filename:     'Free_Writing_Tool_Script.pdf',
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
     html2pdf().from(container).set(opt).save();
   }
@@ -569,7 +552,6 @@
     });
 
     document.getElementById('findReplaceModal').remove();
-    paginateScript();
     autoSave();
     alert('Replacements applied successfully.');
   }
@@ -634,7 +616,10 @@
     div.dataset.bid = 'b-' + (++blockCounter);
     div.contentEditable = 'true';
     div.innerText = text;
-    div.addEventListener('input', autoSave);
+    div.addEventListener('input', () => {
+      autoSave();
+      updateSceneIndex();
+    });
     return div;
   }
 
@@ -643,15 +628,14 @@
     const activeLine = getActiveLine();
     const newDiv = createBlockElement(type, type === 'scene-heading' ? 'INT. ' : '');
     
-    if (activeLine && !activeLine.classList.contains('title-page-block')) {
+    if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
       activeLine.after(newDiv);
     } else {
-      const firstScriptPage = document.querySelectorAll('.script-page')[1] || document.querySelector('.script-page');
-      firstScriptPage.appendChild(newDiv);
+      document.getElementById('scriptPagesContainer').appendChild(newDiv);
     }
 
-    paginateScript();
     focusDiv(newDiv);
+    updateSceneIndex();
     autoSave();
   }
 
@@ -669,7 +653,7 @@
     const sel = window.getSelection();
     if (!sel.rangeCount) return null;
     let node = sel.getRangeAt(0).startContainer;
-    while (node && node.id !== 'scriptPagesContainer') {
+    while (node && node.id !== 'scriptContainerWrapper') {
       if (node.classList && node.classList.contains('script-block')) return node;
       node = node.parentNode;
     }
@@ -682,11 +666,11 @@
   }
 
   function setLineType(div, newType) {
-    if (!div || div.classList.contains('title-page-block')) return;
+    if (!div || div.id === 'titlePageBlock') return;
     div.className = newType + ' script-block';
     document.getElementById('elementType').value = newType;
-    paginateScript();
     autoSave();
+    updateSceneIndex();
   }
 
   function applyElementToCurrentLine() {
@@ -697,7 +681,7 @@
 
   document.addEventListener('selectionchange', () => {
     const activeLine = getActiveLine();
-    if (activeLine && activeLine.className && !activeLine.classList.contains('title-page-block')) {
+    if (activeLine && activeLine.className && activeLine.id !== 'titlePageBlock') {
       const typeClass = Array.from(activeLine.classList).find(c => c !== 'script-block');
       const select = document.getElementById('elementType');
       if (select && typeClass && select.value !== typeClass && elementOrder.includes(typeClass)) {
@@ -705,72 +689,6 @@
       }
     }
   });
-
-  function paginateScript() {
-    const container = document.getElementById('scriptPagesContainer');
-    if (!container) return;
-
-    let titleBlock = container.querySelector('.title-page-block');
-    const allBlocks = Array.from(container.querySelectorAll('.script-block')).filter(b => !b.classList.contains('title-page-block'));
-    const activeBid = getActiveBlockId();
-
-    container.innerHTML = '';
-
-    const titlePage = document.createElement('div');
-    titlePage.className = 'script-page title-sheet';
-    if (titleBlock) {
-      titlePage.appendChild(titleBlock);
-    } else {
-      const titleDiv = document.createElement('div');
-      titleDiv.className = 'title-page-block script-block';
-      titleDiv.dataset.bid = 'b-' + (++blockCounter);
-      titleDiv.contentEditable = 'true';
-      titleDiv.innerHTML = `
-        <div class="title-page-inner">
-          <h2>TITLE OF THE SCRIPT</h2>
-          <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
-          <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
-        </div>
-      `;
-      titleDiv.addEventListener('input', autoSave);
-      titlePage.appendChild(titleDiv);
-    }
-    container.appendChild(titlePage);
-
-    if (allBlocks.length === 0) {
-      allBlocks.push(createBlockElement('action', ''));
-    }
-
-    let pageNum = 1;
-    let currentPage = createPageElement(pageNum);
-    container.appendChild(currentPage);
-
-    allBlocks.forEach((block) => {
-      currentPage.appendChild(block);
-      
-      if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
-        currentPage.removeChild(block);
-        pageNum++;
-        currentPage = createPageElement(pageNum);
-        container.appendChild(currentPage);
-        currentPage.appendChild(block);
-      }
-    });
-
-    if (activeBid) {
-      const targetBlock = container.querySelector(`[data-bid="${activeBid}"]`);
-      if (targetBlock) focusDiv(targetBlock);
-    }
-
-    updateSceneIndex();
-  }
-
-  function createPageElement(num) {
-    const page = document.createElement('div');
-    page.className = 'script-page';
-    page.dataset.pageNum = 'Page ' + num;
-    return page;
-  }
 
   function updateSceneIndex() {
     const sceneList = document.getElementById('sceneList');
@@ -791,24 +709,26 @@
   }
 
   function generateSyncCode() {
+    const titleBlock = document.getElementById('titlePageBlock');
     const container = document.getElementById('scriptPagesContainer');
-    if (!container) return '';
     const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
       className: b.className,
       html: b.innerHTML
     }));
     const titleText = document.getElementById('projectTitleDisplay').innerText;
+    const titlePageHtml = titleBlock ? titleBlock.innerHTML : '';
     const budgetRows = Array.from(document.querySelectorAll('#budgetBody tr')).map(row => ({
       category: row.querySelectorAll('input')[0]?.value || '',
       desc: row.querySelectorAll('input')[1]?.value || '',
       rate: row.querySelector('.rate')?.value || 0,
       units: row.querySelector('.units')?.value || 0
     }));
-    const saveData = { title: titleText, blocks: blocksData, budget: budgetRows };
+    const saveData = { title: titleText, titlePage: titlePageHtml, blocks: blocksData, budget: budgetRows };
     return btoa(unescape(encodeURIComponent(JSON.stringify(saveData))));
   }
 
   function autoSave() {
+    const titleBlock = document.getElementById('titlePageBlock');
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
 
@@ -818,6 +738,7 @@
     }));
 
     const titleText = document.getElementById('projectTitleDisplay').innerText;
+    const titlePageHtml = titleBlock ? titleBlock.innerHTML : '';
 
     const budgetRows = Array.from(document.querySelectorAll('#budgetBody tr')).map(row => ({
       category: row.querySelectorAll('input')[0]?.value || '',
@@ -828,6 +749,7 @@
 
     const saveData = {
       title: titleText,
+      titlePage: titlePageHtml,
       blocks: blocksData,
       budget: budgetRows
     };
@@ -837,81 +759,39 @@
 
   function loadSavedScript() {
     const saved = localStorage.getItem(STORAGE_KEY);
+    const container = document.getElementById('scriptPagesContainer');
+    const titleBlock = document.getElementById('titlePageBlock');
+    
     if (!saved) {
-      paginateScript();
+      if (container.children.length === 0) {
+        container.appendChild(createBlockElement('action', ''));
+      }
+      updateSceneIndex();
       return;
     }
 
     try {
       const data = JSON.parse(saved);
       if (data.title) document.getElementById('projectTitleDisplay').innerText = data.title;
+      if (data.titlePage && titleBlock) titleBlock.innerHTML = data.titlePage;
 
-      const container = document.getElementById('scriptPagesContainer');
       container.innerHTML = '';
 
       if (data.blocks && data.blocks.length > 0) {
-        const tempDiv = document.createElement('div');
         data.blocks.forEach(bData => {
           const div = document.createElement('div');
           div.className = bData.className;
           div.dataset.bid = 'b-' + (++blockCounter);
           div.contentEditable = 'true';
           div.innerHTML = bData.html;
-          div.addEventListener('input', autoSave);
-          tempDiv.appendChild(div);
-        });
-
-        container.appendChild(tempDiv);
-        const extractedBlocks = Array.from(tempDiv.children);
-        tempDiv.remove();
-
-        // Separate out title page block from regular script blocks
-        const titleBlockData = extractedBlocks.find(b => b.classList.contains('title-page-block'));
-        const regularBlocks = extractedBlocks.filter(b => !b.classList.contains('title-page-block'));
-
-        // 1. Recreate Title Sheet Page
-        const titlePage = document.createElement('div');
-        titlePage.className = 'script-page title-sheet';
-        if (titleBlockData) {
-          titlePage.appendChild(titleBlockData);
-        } else {
-          const titleDiv = document.createElement('div');
-          titleDiv.className = 'title-page-block script-block';
-          titleDiv.dataset.bid = 'b-' + (++blockCounter);
-          titleDiv.contentEditable = 'true';
-          titleDiv.innerHTML = `
-            <div class="title-page-inner">
-              <h2>TITLE OF THE SCRIPT</h2>
-              <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
-              <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
-            </div>
-          `;
-          titleDiv.addEventListener('input', autoSave);
-          titlePage.appendChild(titleDiv);
-        }
-        container.appendChild(titlePage);
-
-        // 2. Paginate Regular Script Blocks
-        if (regularBlocks.length === 0) {
-          regularBlocks.push(createBlockElement('action', ''));
-        }
-
-        let pageNum = 1;
-        let currentPage = createPageElement(pageNum);
-        container.appendChild(currentPage);
-
-        regularBlocks.forEach(block => {
-          currentPage.appendChild(block);
-          if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
-            currentPage.removeChild(block);
-            pageNum++;
-            currentPage = createPageElement(pageNum);
-            container.appendChild(currentPage);
-            currentPage.appendChild(block);
-          }
+          div.addEventListener('input', () => {
+            autoSave();
+            updateSceneIndex();
+          });
+          container.appendChild(div);
         });
       } else {
-        paginateScript();
+        container.appendChild(createBlockElement('action', ''));
       }
 
       if (data.budget && data.budget.length > 0) {
@@ -935,7 +815,10 @@
       updateSceneIndex();
     } catch (e) {
       console.error("Failed to load saved data:", e);
-      paginateScript();
+      if (container.children.length === 0) {
+        container.appendChild(createBlockElement('action', ''));
+      }
+      updateSceneIndex();
     }
   }
 
@@ -974,24 +857,26 @@
 
   function exportToFountain() {
     let fountainText = "";
-    document.querySelectorAll('.script-page').forEach(page => {
-      page.querySelectorAll('.script-block').forEach(b => {
-        const text = b.innerText.trim();
-        if (!text) return;
-        if (b.classList.contains('scene-heading')) {
-          fountainText += `\n\n${text}\n`;
-        } else if (b.classList.contains('character')) {
-          fountainText += `\n\n${text}\n`;
-        } else if (b.classList.contains('parenthetical')) {
-          fountainText += `${text}\n`;
-        } else if (b.classList.contains('dialogue')) {
-          fountainText += `${text}\n`;
-        } else if (b.classList.contains('transition')) {
-          fountainText += `\n\n> ${text}\n`;
-        } else {
-          fountainText += `\n\n${text}\n`;
-        }
-      });
+    const titleBlock = document.getElementById('titlePageBlock');
+    if (titleBlock && titleBlock.innerText.trim()) {
+      fountainText += titleBlock.innerText + "\n\n";
+    }
+    document.querySelectorAll('.script-container-wrapper .script-block').forEach(b => {
+      const text = b.innerText.trim();
+      if (!text || b.id === 'titlePageBlock') return;
+      if (b.classList.contains('scene-heading')) {
+        fountainText += `\n\n${text}\n`;
+      } else if (b.classList.contains('character')) {
+        fountainText += `\n\n${text}\n`;
+      } else if (b.classList.contains('parenthetical')) {
+        fountainText += `${text}\n`;
+      } else if (b.classList.contains('dialogue')) {
+        fountainText += `${text}\n`;
+      } else if (b.classList.contains('transition')) {
+        fountainText += `\n\n> ${text}\n`;
+      } else {
+        fountainText += `\n\n${text}\n`;
+      }
     });
 
     const blob = new Blob([fountainText], { type: 'text/plain;charset=utf-8' });
@@ -1019,10 +904,6 @@
     const container = document.getElementById('scriptPagesContainer');
     container.innerHTML = '';
     
-    let pageNum = 1;
-    let currentPage = createPageElement(pageNum);
-    container.appendChild(currentPage);
-
     lines.forEach(line => {
       const trimmed = line.trim();
       if (!trimmed) return;
@@ -1039,18 +920,10 @@
       }
 
       const div = createBlockElement(type, trimmed);
-      currentPage.appendChild(div);
-
-      if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
-        currentPage.removeChild(div);
-        pageNum++;
-        currentPage = createPageElement(pageNum);
-        container.appendChild(currentPage);
-        currentPage.appendChild(div);
-      }
+      container.appendChild(div);
     });
 
-    paginateScript();
+    updateSceneIndex();
     autoSave();
     alert('Fountain script imported successfully!');
   }
@@ -1095,6 +968,7 @@
     const charMap = {};
 
     blocks.forEach(b => {
+      if (b.id === 'titlePageBlock') return;
       if (b.classList.contains('dialogue')) {
         dialogueCount++;
       } else if (b.classList.contains('action')) {
@@ -1145,18 +1019,18 @@
 
   document.addEventListener('keydown', function(e) {
     const activeLine = getActiveLine();
-    if (!activeLine || activeLine.classList.contains('title-page-block')) return;
+    if (!activeLine) return;
 
-    if (e.key === 'Backspace' && activeLine.innerText === '') {
-      const allScriptBlocks = Array.from(document.querySelectorAll('.script-block')).filter(b => !b.classList.contains('title-page-block'));
+    if (e.key === 'Backspace' && activeLine.innerText === '' && activeLine.id !== 'titlePageBlock') {
+      const allScriptBlocks = Array.from(document.querySelectorAll('#scriptPagesContainer .script-block'));
       const index = allScriptBlocks.indexOf(activeLine);
       
       if (allScriptBlocks.length > 1 && index > 0) {
         e.preventDefault();
         const prevBlock = allScriptBlocks[index - 1];
         activeLine.remove();
-        paginateScript();
         focusDiv(prevBlock);
+        updateSceneIndex();
         autoSave();
         return;
       }
@@ -1178,6 +1052,7 @@
 
     if (e.key === 'Tab') {
       e.preventDefault();
+      if (activeLine.id === 'titlePageBlock') return;
       const currentType = Array.from(activeLine.classList).find(c => c !== 'script-block') || 'action';
       const currentIndex = elementOrder.indexOf(currentType);
       const nextType = elementOrder[(currentIndex + 1) % elementOrder.length];
@@ -1188,8 +1063,14 @@
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
 
-      // Safeguard: Prevent runaway block spam if the current line is completely empty
+      // Safeguard against spamming empty lines
       if (activeLine.innerText.trim() === '') {
+        return;
+      }
+
+      if (activeLine.id === 'titlePageBlock') {
+        // Allow newline inside title block
+        document.execCommand('insertLineBreak');
         return;
       }
 
@@ -1204,8 +1085,8 @@
 
       const newDiv = createBlockElement(nextType, nextType === 'scene-heading' ? 'INT. ' : '');
       activeLine.after(newDiv);
-      paginateScript();
       focusDiv(newDiv);
+      updateSceneIndex();
       autoSave();
       return;
     }
