@@ -18,6 +18,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
   }
   header {
     background: #111115;
@@ -28,6 +29,7 @@
     border-bottom: 1px solid #2d2d35;
     flex-wrap: wrap;
     gap: 10px;
+    z-index: 100;
   }
   h1 { margin: 0; font-size: 1.1rem; color: #ff9900; font-weight: 700; letter-spacing: 0.5px; }
   
@@ -120,10 +122,15 @@
   .scene-list li:hover { background: #2a2a35; border-color: #ff9900; color: #fff; }
 
   .editor-view, .budget-view, .analytics-view, .beatboard-view { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+  .editor-view {
+    background: #282830;
+    align-items: center;
+    padding: 30px 20px;
+  }
   .hidden { display: none !important; }
   
   .toolbar {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     display: flex;
     gap: 8px;
     background: #22222a;
@@ -132,10 +139,7 @@
     border: 1px solid #333;
     align-items: center;
     flex-wrap: wrap;
-    max-width: 8.5in;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
+    width: 8.5in;
   }
   .toolbar select, .toolbar button {
     padding: 6px 12px;
@@ -147,24 +151,43 @@
   }
   .shortcut-legend { font-size: 0.75rem; color: #aaa; margin-left: auto; }
 
-  /* Professional Continuous Script Document Container (Celtx / Google Docs Standard) */
+  /* Google Docs / Celtx Style Multi-Page Workspace Container */
   #scriptContainerWrapper {
+    width: auto;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px; /* Gap between physical pages */
+  }
+
+  /* Physical Page Sheet */
+  .script-page {
     width: 8.5in;
-    margin: 0 auto 40px auto;
+    min-height: 11in;
     background: #ffffff;
     color: #000000;
-    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+    box-shadow: 0 10px 35px rgba(0,0,0,0.6);
     border-radius: 2px;
-    padding: 1in 1in 1in 1.5in; /* Standard Screenplay Margins: 1.5" left, 1" others */
+    padding: 1in 1in 1in 1.5in;
     font-family: "Courier Prime", "Courier New", Courier, monospace;
     font-size: 12pt;
     line-height: 1.5;
-    min-height: 11in;
-  }
-
-  #scriptPagesContainer {
+    position: relative;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Running Header on pages > 1 */
+  .script-page.has-running-header::before {
+    content: attr(data-header-text);
+    position: absolute;
+    top: 0.5in;
+    right: 1in;
+    font-size: 10pt;
+    color: #777;
   }
 
   .script-block { min-height: 1.5em; outline: none; margin-bottom: 0; }
@@ -173,9 +196,8 @@
   .title-page-container {
     padding: 2in 0;
     text-align: center;
-    page-break-after: always;
     border-bottom: 2px dashed #ccc;
-    margin-bottom: 2in;
+    margin-bottom: 1in;
   }
   .title-page-container h2 { font-size: 20pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
   .title-page-container p { font-size: 12pt; margin: 10px 0; }
@@ -243,24 +265,22 @@
   input[type="text"], input[type="number"] { background: #17171e; border: 1px solid #3e3e4d; color: #fff; padding: 6px 10px; border-radius: 4px; width: 95%; }
   .stat-card { background: #22222a; padding: 15px; border-radius: 6px; border: 1px solid #333; margin-bottom: 15px; }
 
-  /* MOBILE RESPONSIVE OVERRIDES */
   @media (max-width: 768px) {
     .container { flex-direction: column; overflow-y: auto; }
     aside { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid #2d2d35; padding: 10px; }
     .editor-view, .budget-view, .analytics-view, .beatboard-view { padding: 10px; overflow-y: visible; }
-    #scriptContainerWrapper { width: 100% !important; margin: 0 auto; padding: 1rem !important; font-size: 11pt; }
-    .toolbar { width: 100%; margin-left: 0; margin-right: 0; }
+    .script-page { width: 100% !important; min-height: auto; padding: 1rem !important; font-size: 11pt; }
+    .toolbar { width: 100%; }
     .shortcut-legend { display: none; }
-    header { padding: 8px 10px; }
-    h1 { font-size: 0.95rem; }
   }
 
   @media print {
-    body { background: #fff; color: #000; }
+    body { background: #fff; color: #000; overflow: visible; }
     header, .toolbar, nav, aside, .budget-view, .analytics-view, .beatboard-view, .btn { display: none !important; }
     .container { overflow: visible; display: block; }
-    .editor-view { padding: 0; overflow: visible; }
-    #scriptContainerWrapper { width: 100%; box-shadow: none; margin: 0; padding: 1in; }
+    .editor-view { padding: 0; background: #fff; overflow: visible; }
+    #scriptContainerWrapper { gap: 0; }
+    .script-page { box-shadow: none; margin: 0; page-break-after: always; }
   }
 </style>
 </head>
@@ -272,7 +292,6 @@
     
     <!-- MENUBAR -->
     <div class="menubar">
-      <!-- FILE MENU -->
       <div class="menu-dropdown" id="menuFile">
         <button class="menu-btn" onclick="toggleMenu('menuFile')">File ▾</button>
         <div class="dropdown-content">
@@ -290,7 +309,6 @@
         </div>
       </div>
 
-      <!-- EDIT MENU -->
       <div class="menu-dropdown" id="menuEdit">
         <button class="menu-btn" onclick="toggleMenu('menuEdit')">Edit ▾</button>
         <div class="dropdown-content">
@@ -301,7 +319,6 @@
         </div>
       </div>
 
-      <!-- SCRIPT MENU -->
       <div class="menu-dropdown" id="menuScript">
         <button class="menu-btn" onclick="toggleMenu('menuScript')">Script ▾</button>
         <div class="dropdown-content">
@@ -310,7 +327,6 @@
         </div>
       </div>
 
-      <!-- TOOLS MENU -->
       <div class="menu-dropdown" id="menuTools">
         <button class="menu-btn" onclick="toggleMenu('menuTools')">Tools ▾</button>
         <div class="dropdown-content">
@@ -363,17 +379,21 @@
         <option value="transition">Transition (Ctrl+6)</option>
       </select>
       <button onclick="addBlock()">+ Insert Block</button>
-      <span class="shortcut-legend"><b>Tab</b>: Format | <b>Enter</b>: New Line</span>
+      <span class="shortcut-legend"><b>Tab</b>: Format | <b>Enter</b>: New Page/Line</span>
     </div>
     
-    <!-- PROFESSIONAL CONTINUOUS SCRIPT CONTAINER -->
+    <!-- MULTI-PAGE WORKSPACE CONTAINER -->
     <div id="scriptContainerWrapper">
-      <div id="titlePageBlock" class="title-page-container script-block" contenteditable="true" data-bid="title-block">
-        <h2>TITLE OF THE SCRIPT</h2>
-        <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
-        <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
+      <div id="titlePageSheet" class="script-page">
+        <div id="titlePageBlock" class="title-page-container script-block" contenteditable="true" data-bid="title-block">
+          <h2>TITLE OF THE SCRIPT</h2>
+          <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
+          <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
+        </div>
       </div>
-      <div id="scriptPagesContainer"></div>
+      <div id="scriptPagesContainer" style="display:flex; flex-direction:column; gap:40px; width:100%; align-items:center;">
+        <!-- Dynamic Script Pages Will Render Here -->
+      </div>
     </div>
   </div>
 
@@ -384,7 +404,7 @@
     <div id="corkboardGrid" class="corkboard-grid"></div>
   </div>
 
-  <!-- ANALYTICS & CHARACTER PROFILES TAB -->
+  <!-- ANALYTICS TAB -->
   <div id="analyticsView" class="analytics-view hidden">
     <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Script Analytics & Breakdown</h2>
     <div class="stat-card">
@@ -394,7 +414,6 @@
     </div>
 
     <h3 style="font-size:1rem; color:#ccc; margin-top:20px;">Character Profile Tracker & Notes</h3>
-    <p style="font-size:0.82rem; color:#aaa;">Characters are auto-detected from your script headings. Add custom bios and motivations below:</p>
     <table>
       <thead>
         <tr><th>Character Name</th><th>Line Count</th><th>Estimated Share</th><th>Character Bio & Arc Notes</th></tr>
@@ -439,7 +458,7 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v3';
+  const STORAGE_KEY = 'free_writing_tool_pro_v4';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
 
@@ -485,6 +504,7 @@
     if (newName) {
       document.getElementById('projectTitleDisplay').innerText = '🎬 ' + newName.toUpperCase();
       autoSave();
+      renderPages();
     }
   }
 
@@ -496,9 +516,9 @@
       if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
         activeLine.after(div);
       } else {
-        document.getElementById('scriptPagesContainer').appendChild(div);
+        document.querySelector('.script-page').appendChild(div);
       }
-      updateSceneIndex();
+      renderPages();
       focusDiv(div);
       autoSave();
     }
@@ -556,7 +576,6 @@
     alert('Replacements applied successfully.');
   }
 
-  // Cross-Device Sync Modal System
   function openSyncModal() {
     const currentCode = generateSyncCode();
     const modalHtml = `
@@ -564,7 +583,7 @@
         <div class="modal">
           <h3>📱 Cross-Device Cloud Sync</h3>
           <p style="font-size: 0.8rem; color: #aaa; margin-top: 0;">
-            Copy this code to transfer your script to your other device, or paste a sync code below to load your script here:
+            Copy this code to transfer your script to your other device, or paste a sync code below:
           </p>
           <label style="font-size:0.75rem; color:#ff9900;">Your Current Sync Code:</label>
           <textarea id="modalSyncTextarea" readonly onclick="this.select()">${currentCode}</textarea>
@@ -572,7 +591,7 @@
             <button class="btn" style="flex:1;" onclick="copyModalSyncCode()">Copy Code</button>
           </div>
           <div style="border-top: 1px solid #3e3e4d; padding-top: 12px;">
-            <label style="font-size:0.75rem; color:#ff9900;">Paste Sync Code from other device:</label>
+            <label style="font-size:0.75rem; color:#ff9900;">Paste Sync Code:</label>
             <textarea id="modalPasteTextarea" placeholder="Paste code here..."></textarea>
             <div class="modal-btns">
               <button class="btn" onclick="document.getElementById('syncModal').remove()">Close</button>
@@ -606,7 +625,7 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       location.reload();
     } catch (e) {
-      alert("Invalid sync code. Please check the code and try again.");
+      alert("Invalid sync code.");
     }
   }
 
@@ -619,6 +638,7 @@
     div.addEventListener('input', () => {
       autoSave();
       updateSceneIndex();
+      checkPageOverflow();
     });
     return div;
   }
@@ -631,12 +651,18 @@
     if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
       activeLine.after(newDiv);
     } else {
-      document.getElementById('scriptPagesContainer').appendChild(newDiv);
+      let firstPage = document.querySelector('.script-page');
+      if (!firstPage) {
+        firstPage = createNewPageSheet(1);
+        document.getElementById('scriptContainerWrapper').appendChild(firstPage);
+      }
+      firstPage.appendChild(newDiv);
     }
 
     focusDiv(newDiv);
     updateSceneIndex();
     autoSave();
+    checkPageOverflow();
   }
 
   function focusDiv(el) {
@@ -658,11 +684,6 @@
       node = node.parentNode;
     }
     return null;
-  }
-
-  function getActiveBlockId() {
-    const active = getActiveLine();
-    return active ? active.dataset.bid : null;
   }
 
   function setLineType(div, newType) {
@@ -708,10 +729,51 @@
     if (totalScenesEl) totalScenesEl.innerText = 'Total Scenes: ' + sceneCount;
   }
 
+  function createNewPageSheet(pageNum) {
+    const page = document.createElement('div');
+    page.className = pageNum > 1 ? 'script-page has-running-header' : 'script-page';
+    const scriptTitle = document.getElementById('projectTitleDisplay').innerText.replace('🎬 ', '');
+    page.dataset.headerText = `${scriptTitle.toUpperCase()} — P. ${pageNum}`;
+    return page;
+  }
+
+  function checkPageOverflow() {
+    // Basic automatic pagination reflow across physical pages
+    const container = document.getElementById('scriptPagesContainer');
+    if (!container) return;
+
+    // Gather all script blocks across pages
+    const allBlocks = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock');
+    if (allBlocks.length === 0) return;
+
+    container.innerHTML = '';
+    let currentPage = createNewPageSheet(2);
+    container.appendChild(currentPage);
+
+    let pageHeightLimit = 750; // approximate pixel height per page sheet content area
+    let currentHeight = 0;
+
+    allBlocks.forEach(block => {
+      // Temporarily append to measure height
+      currentPage.appendChild(block);
+      let blockH = block.offsetHeight || 30;
+      currentHeight += blockH;
+
+      if (currentHeight > pageHeightLimit) {
+        // Move to next page
+        currentPage.removeChild(block);
+        const pageNum = container.querySelectorAll('.script-page').length + 2;
+        currentPage = createNewPageSheet(pageNum);
+        container.appendChild(currentPage);
+        currentPage.appendChild(block);
+        currentHeight = blockH;
+      }
+    });
+  }
+
   function generateSyncCode() {
     const titleBlock = document.getElementById('titlePageBlock');
-    const container = document.getElementById('scriptPagesContainer');
-    const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
+    const blocksData = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
       className: b.className,
       html: b.innerHTML
     }));
@@ -729,10 +791,7 @@
 
   function autoSave() {
     const titleBlock = document.getElementById('titlePageBlock');
-    const container = document.getElementById('scriptPagesContainer');
-    if (!container) return;
-
-    const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
+    const blocksData = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
       className: b.className,
       html: b.innerHTML
     }));
@@ -763,9 +822,9 @@
     const titleBlock = document.getElementById('titlePageBlock');
     
     if (!saved) {
-      if (container.children.length === 0) {
-        container.appendChild(createBlockElement('action', ''));
-      }
+      const firstPage = createNewPageSheet(2);
+      firstPage.appendChild(createBlockElement('action', ''));
+      container.appendChild(firstPage);
       updateSceneIndex();
       return;
     }
@@ -776,6 +835,8 @@
       if (data.titlePage && titleBlock) titleBlock.innerHTML = data.titlePage;
 
       container.innerHTML = '';
+      const firstPage = createNewPageSheet(2);
+      container.appendChild(firstPage);
 
       if (data.blocks && data.blocks.length > 0) {
         data.blocks.forEach(bData => {
@@ -787,11 +848,12 @@
           div.addEventListener('input', () => {
             autoSave();
             updateSceneIndex();
+            checkPageOverflow();
           });
-          container.appendChild(div);
+          firstPage.appendChild(div);
         });
       } else {
-        container.appendChild(createBlockElement('action', ''));
+        firstPage.appendChild(createBlockElement('action', ''));
       }
 
       if (data.budget && data.budget.length > 0) {
@@ -813,11 +875,11 @@
       }
 
       updateSceneIndex();
+      checkPageOverflow();
     } catch (e) {
-      console.error("Failed to load saved data:", e);
-      if (container.children.length === 0) {
-        container.appendChild(createBlockElement('action', ''));
-      }
+      const firstPage = createNewPageSheet(2);
+      firstPage.appendChild(createBlockElement('action', ''));
+      container.appendChild(firstPage);
       updateSceneIndex();
     }
   }
@@ -829,6 +891,10 @@
     }
   }
 
+  function renderPages() {
+    checkPageOverflow();
+  }
+
   function generateBeatBoard() {
     const grid = document.getElementById('corkboardGrid');
     if (!grid) return;
@@ -836,7 +902,7 @@
 
     const scenes = document.querySelectorAll('.scene-heading');
     if (scenes.length === 0) {
-      grid.innerHTML = `<p style="color:#aaa; grid-column: 1/-1;">No scene headings found in your script yet. Add some Scene Headings in the script editor to populate your corkboard!</p>`;
+      grid.innerHTML = `<p style="color:#aaa; grid-column: 1/-1;">No scene headings found in your script yet. Add some Scene Headings to populate your corkboard!</p>`;
       return;
     }
 
@@ -861,7 +927,7 @@
     if (titleBlock && titleBlock.innerText.trim()) {
       fountainText += titleBlock.innerText + "\n\n";
     }
-    document.querySelectorAll('.script-container-wrapper .script-block').forEach(b => {
+    document.querySelectorAll('#scriptContainerWrapper .script-block').forEach(b => {
       const text = b.innerText.trim();
       if (!text || b.id === 'titlePageBlock') return;
       if (b.classList.contains('scene-heading')) {
@@ -893,8 +959,7 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(event) {
-      const content = event.target.result;
-      parseAndLoadFountain(content);
+      parseAndLoadFountain(event.target.result);
     };
     reader.readAsText(file);
   }
@@ -903,6 +968,8 @@
     const lines = text.split(/\r?\n/);
     const container = document.getElementById('scriptPagesContainer');
     container.innerHTML = '';
+    const firstPage = createNewPageSheet(2);
+    container.appendChild(firstPage);
     
     lines.forEach(line => {
       const trimmed = line.trim();
@@ -920,11 +987,12 @@
       }
 
       const div = createBlockElement(type, trimmed);
-      container.appendChild(div);
+      firstPage.appendChild(div);
     });
 
     updateSceneIndex();
     autoSave();
+    checkPageOverflow();
     alert('Fountain script imported successfully!');
   }
 
@@ -990,7 +1058,7 @@
     if (tbody) {
       tbody.innerHTML = '';
       if (Object.keys(charMap).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#aaa;">No characters detected yet. Add Character elements in your script!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#aaa;">No characters detected yet.</td></tr>`;
         return;
       }
 
@@ -1004,7 +1072,7 @@
           <td><strong>${char}</strong></td>
           <td>${charMap[char]} lines</td>
           <td>${sharePct}%</td>
-          <td><textarea style="width:100%; background:#17171e; border:1px solid #3e3e4d; color:#fff; padding:6px; border-radius:4px; font-family:inherit; font-size:0.8rem; resize:vertical;" placeholder="Add bio, casting notes, or arc..." oninput="localStorage.setItem('${bioKey}', this.value)">${savedBio}</textarea></td>
+          <td><textarea style="width:100%; background:#17171e; border:1px solid #3e3e4d; color:#fff; padding:6px; border-radius:4px; font-family:inherit; font-size:0.8rem; resize:vertical;" placeholder="Add bio..." oninput="localStorage.setItem('${bioKey}', this.value)">${savedBio}</textarea></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1022,7 +1090,7 @@
     if (!activeLine) return;
 
     if (e.key === 'Backspace' && activeLine.innerText === '' && activeLine.id !== 'titlePageBlock') {
-      const allScriptBlocks = Array.from(document.querySelectorAll('#scriptPagesContainer .script-block'));
+      const allScriptBlocks = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock');
       const index = allScriptBlocks.indexOf(activeLine);
       
       if (allScriptBlocks.length > 1 && index > 0) {
@@ -1032,6 +1100,7 @@
         focusDiv(prevBlock);
         updateSceneIndex();
         autoSave();
+        checkPageOverflow();
         return;
       }
     }
@@ -1063,13 +1132,7 @@
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
 
-      // Safeguard against spamming empty lines
-      if (activeLine.innerText.trim() === '') {
-        return;
-      }
-
       if (activeLine.id === 'titlePageBlock') {
-        // Allow newline inside title block
         document.execCommand('insertLineBreak');
         return;
       }
@@ -1088,6 +1151,7 @@
       focusDiv(newDiv);
       updateSceneIndex();
       autoSave();
+      checkPageOverflow();
       return;
     }
   });
