@@ -96,7 +96,7 @@
   .container { display: flex; flex: 1; overflow: hidden; position: relative; }
   
   aside {
-    width: 260px;
+    width: 270px;
     background: #141418;
     border-right: 1px solid #2d2d35;
     display: flex;
@@ -105,7 +105,7 @@
     overflow-y: auto;
   }
   aside h3 { font-size: 0.85rem; text-transform: uppercase; color: #888; margin-top: 0; margin-bottom: 10px; letter-spacing: 1px; }
-  .scene-list { list-style: none; padding: 0; margin: 0; }
+  .scene-list { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; }
   .scene-list li {
     padding: 8px 10px;
     background: #1d1d24;
@@ -173,7 +173,6 @@
   }
   .script-page div { min-height: 1.5em; outline: none; }
 
-  /* Page Number Footer on Standard Pages */
   .script-page::after {
     content: attr(data-page-num);
     position: absolute;
@@ -343,15 +342,27 @@
 </header>
 
 <div class="container">
-  <!-- SIDEBAR: SCENE INDEX & HELP BOX -->
+  <!-- SIDEBAR: SCENE INDEX & SYNC CODES -->
   <aside id="sidebar">
     <h3>Scene Index</h3>
     <ul id="sceneList" class="scene-list"></ul>
 
-    <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #2d2d38;">
-      <h3 style="font-size: 0.75rem; color: #ff9900; margin-bottom: 6px;">💡 Auto-Save Active</h3>
-      <p style="font-size: 0.75rem; color: #aaa; line-height: 1.4; margin: 0;">
-        Changes are saved instantly to your browser storage. Use <strong>Tab</strong> to rotate elements and <strong>Ctrl+1..6</strong> for formatting shortcuts.
+    <!-- Cross-Device Sync Box -->
+    <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #2d2d38;">
+      <h3 style="font-size: 0.75rem; color: #ff9900; margin-bottom: 6px;">📱 Cross-Device Sync</h3>
+      <p style="font-size: 0.72rem; color: #aaa; line-height: 1.3; margin-bottom: 8px;">
+        Auto-generated sync code for phone/PC transfer:
+      </p>
+      <input type="text" id="syncCodeInput" readonly style="font-size: 0.7rem; font-family: monospace; background: #111; margin-bottom: 6px; width: 100%;" onclick="this.select()">
+      <div style="display: flex; gap: 5px;">
+        <button class="btn" style="flex: 1; font-size: 0.75rem; padding: 4px;" onclick="copySyncCode()">Copy</button>
+        <button class="btn btn-accent" style="flex: 1; font-size: 0.75rem; padding: 4px;" onclick="promptLoadSyncCode()">Load</button>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding-top: 12px; border-top: 1px solid #2d2d38;">
+      <p style="font-size: 0.72rem; color: #888; line-height: 1.3; margin: 0;">
+        <strong>Tab</strong> rotates elements. <strong>Ctrl+1..6</strong> sets format.
       </p>
     </div>
   </aside>
@@ -442,7 +453,6 @@
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
 
-  // Initialize App & Load Saved Storage on Startup
   window.addEventListener('DOMContentLoaded', () => {
     loadSavedScript();
   });
@@ -721,12 +731,59 @@
     if (totalScenesEl) totalScenesEl.innerText = 'Total Scenes: ' + sceneCount;
   }
 
+  // Cross-Device Sync Code Engine
+  function generateSyncCode() {
+    const container = document.getElementById('scriptPagesContainer');
+    if (!container) return '';
+    const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
+      className: b.className,
+      html: b.innerHTML
+    }));
+    const titleText = document.getElementById('projectTitleDisplay').innerText;
+    const budgetRows = Array.from(document.querySelectorAll('#budgetBody tr')).map(row => ({
+      category: row.querySelectorAll('input')[0]?.value || '',
+      desc: row.querySelectorAll('input')[1]?.value || '',
+      rate: row.querySelector('.rate')?.value || 0,
+      units: row.querySelector('.units')?.value || 0
+    }));
+    const saveData = { title: titleText, blocks: blocksData, budget: budgetRows };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(saveData))));
+  }
+
+  function updateSyncBox() {
+    const syncInput = document.getElementById('syncCodeInput');
+    if (syncInput) {
+      syncInput.value = generateSyncCode();
+    }
+  }
+
+  function copySyncCode() {
+    const syncInput = document.getElementById('syncCodeInput');
+    if (!syncInput) return;
+    syncInput.select();
+    navigator.clipboard.writeText(syncInput.value).then(() => {
+      alert('Sync code copied to clipboard! Paste it on your other device.');
+    });
+  }
+
+  function promptLoadSyncCode() {
+    const code = prompt("Paste your sync code from your other device:");
+    if (!code) return;
+    try {
+      const jsonString = decodeURIComponent(escape(atob(code.trim())));
+      const data = JSON.parse(jsonString);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      location.reload();
+    } catch (e) {
+      alert("Invalid sync code. Please check the code and try again.");
+    }
+  }
+
   // Real LocalStorage Auto-Save System
   function autoSave() {
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
 
-    // Collect all blocks with their classes and innerText
     const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
       className: b.className,
       html: b.innerHTML
@@ -734,7 +791,6 @@
 
     const titleText = document.getElementById('projectTitleDisplay').innerText;
 
-    // Budget data
     const budgetRows = Array.from(document.querySelectorAll('#budgetBody tr')).map(row => ({
       category: row.querySelectorAll('input')[0]?.value || '',
       desc: row.querySelectorAll('input')[1]?.value || '',
@@ -749,12 +805,14 @@
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+    updateSyncBox();
   }
 
   function loadSavedScript() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) {
       paginateScript();
+      updateSyncBox();
       return;
     }
 
@@ -766,7 +824,6 @@
       container.innerHTML = '';
 
       if (data.blocks && data.blocks.length > 0) {
-        // Rebuild temporary container to paginate
         const tempDiv = document.createElement('div');
         data.blocks.forEach(bData => {
           const div = document.createElement('div');
@@ -778,9 +835,7 @@
           tempDiv.appendChild(div);
         });
 
-        // Temporarily put them in container to let pagination lay them out properly
         container.appendChild(tempDiv);
-        // Extract blocks and run pagination
         const extractedBlocks = Array.from(tempDiv.children);
         tempDiv.remove();
 
@@ -802,7 +857,6 @@
         paginateScript();
       }
 
-      // Restore Budget Data if present
       if (data.budget && data.budget.length > 0) {
         const tbody = document.getElementById('budgetBody');
         tbody.innerHTML = '';
@@ -822,9 +876,11 @@
       }
 
       updateSceneIndex();
+      updateSyncBox();
     } catch (e) {
       console.error("Failed to load saved data:", e);
       paginateScript();
+      updateSyncBox();
     }
   }
 
