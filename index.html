@@ -364,7 +364,7 @@
     <ul id="sceneList" class="scene-list"></ul>
 
     <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #2d2d38;">
-      <button class="btn btn-accent" style="width: 100%; font-size: 0.78rem;" onclick="openSyncModal()">📱 Cross-Device Sync</button>
+      <button class="btn btn-accent" style="width: 100%; font-size: 0.78rem;" onclick="openSyncModal()">📱 Cloud Sync</button>
     </div>
 
     <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #2d2d38;">
@@ -574,7 +574,7 @@
     alert('Replacements applied successfully.');
   }
 
-  // Cross-Device Sync Modal System (Solves mobile pasting issues)
+  // Cross-Device Sync Modal System
   function openSyncModal() {
     const currentCode = generateSyncCode();
     const modalHtml = `
@@ -809,7 +809,6 @@
     return btoa(unescape(encodeURIComponent(JSON.stringify(saveData))));
   }
 
-  // Real LocalStorage Auto-Save System
   function autoSave() {
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
@@ -917,7 +916,6 @@
     }
   }
 
-  // Visual Beat Board Generator
   function generateBeatBoard() {
     const grid = document.getElementById('corkboardGrid');
     if (!grid) return;
@@ -944,7 +942,6 @@
     });
   }
 
-  // Fountain Import & Export Utilities
   function exportToFountain() {
     let fountainText = "";
     document.querySelectorAll('.script-page').forEach(page => {
@@ -1061,7 +1058,6 @@
     calcBudget();
   }
 
-  // Character Profiles & Analytics Generator
   function generateAnalytics() {
     const blocks = document.querySelectorAll('.script-block');
     let dialogueCount = 0;
@@ -1117,7 +1113,6 @@
     alert(`Imported ${file.name} successfully!`);
   }
 
-  // Keyboard Shortcuts Handler
   document.addEventListener('keydown', function(e) {
     const activeLine = getActiveLine();
     if (!activeLine || activeLine.classList.contains('title-page-block')) return;
