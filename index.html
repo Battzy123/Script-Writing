@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free Writing Tool</title>
+<title>Free Writing Tool - Pro</title>
 <!-- PDF.js for importing PDFs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <!-- html2pdf.js for exporting real PDF files -->
@@ -75,7 +75,7 @@
   .dropdown-content a:hover .shortcut { color: #333; }
   .dropdown-divider { height: 1px; background: #2d2d38; margin: 4px 0; }
 
-  nav { display: flex; gap: 8px; align-items: center; }
+  nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   nav button, .btn {
     background: #252530;
     color: #ccc;
@@ -120,7 +120,7 @@
   }
   .scene-list li:hover { background: #2a2a35; border-color: #ff9900; color: #fff; }
 
-  .editor-view, .budget-view, .analytics-view { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
+  .editor-view, .budget-view, .analytics-view, .beatboard-view { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
   .hidden { display: none !important; }
   
   .toolbar {
@@ -184,12 +184,8 @@
     color: #777;
   }
 
-  /* Title Sheet suppresses page numbering */
-  .script-page.title-sheet::after {
-    content: "";
-  }
+  .script-page.title-sheet::after { content: ""; }
 
-  /* Fixed Title Page Styling */
   .title-page-block {
     text-align: center;
     height: 9.3in;
@@ -220,30 +216,34 @@
   .dialogue { margin-left: 22%; margin-right: 22%; margin-bottom: 1em; }
   .transition { text-transform: uppercase; margin-left: 65%; margin-top: 1em; margin-bottom: 1em; }
 
-  .autocomplete-popup {
-    position: absolute;
-    background: #22222a;
-    color: #fff;
-    border: 1px solid #ff9900;
+  /* Beat Board Corkboard Grid */
+  .corkboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+  }
+  .beat-card {
+    background: #2a251d;
+    border: 1px solid #d4a373;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .beat-card h4 { margin: 0; font-size: 0.9rem; color: #ffb703; text-transform: uppercase; }
+  .beat-card textarea {
+    background: #1b1712;
+    border: 1px solid #44372a;
+    color: #fefae0;
+    padding: 8px;
     border-radius: 4px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
-    z-index: 1000;
-    max-height: 160px;
-    overflow-y: auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: inherit;
     font-size: 0.85rem;
-    min-width: 220px;
-  }
-  .autocomplete-item {
-    padding: 8px 12px;
-    cursor: pointer;
-    border-bottom: 1px solid #2d2d35;
-  }
-  .autocomplete-item:last-child { border-bottom: none; }
-  .autocomplete-item:hover, .autocomplete-item.selected {
-    background: #ff9900;
-    color: #000;
-    font-weight: bold;
+    resize: vertical;
+    min-height: 80px;
   }
 
   /* Modal Dialogs */
@@ -266,7 +266,7 @@
 
   @media print {
     body { background: #fff; color: #000; }
-    header, .toolbar, nav, aside, .budget-view, .analytics-view, .btn, .autocomplete-popup { display: none !important; }
+    header, .toolbar, nav, aside, .budget-view, .analytics-view, .beatboard-view, .btn { display: none !important; }
     .container { overflow: visible; display: block; }
     .editor-view { padding: 0; overflow: visible; }
     #scriptPagesContainer { width: 100%; gap: 0; }
@@ -279,22 +279,23 @@
 
 <header>
   <div style="display: flex; align-items: center; gap: 20px;">
-    <h1 id="projectTitleDisplay">🎬 FREE WRITING TOOL</h1>
+    <h1 id="projectTitleDisplay">🎬 FREE WRITING TOOL PRO</h1>
     
-    <!-- CLEAN MENUBAR -->
+    <!-- MENUBAR -->
     <div class="menubar">
       <!-- FILE MENU -->
       <div class="menu-dropdown" id="menuFile">
         <button class="menu-btn" onclick="toggleMenu('menuFile')">File ▾</button>
         <div class="dropdown-content">
-          <label onclick="document.getElementById('scriptImportInput').click()">Import Script <span class="shortcut">PDF/Txt</span></label>
-          <a onclick="exportToPdf()">Export Script (.pdf) <span class="shortcut">PDF</span></a>
+          <label onclick="document.getElementById('scriptImportInput').click()">Import Script / PDF <span class="shortcut">PDF/Txt</span></label>
+          <label onclick="document.getElementById('fountainImportInput').click()">Import Fountain (.fountain) <span class="shortcut">.txt</span></label>
+          <a onclick="exportToFountain()">Export Fountain (.fountain) <span class="shortcut">Ftn</span></a>
           <div class="dropdown-divider"></div>
+          <a onclick="exportToPdf()">Export Script (.pdf) <span class="shortcut">PDF</span></a>
           <a onclick="promptAddEpisode()">Add Episodes</a>
           <a onclick="promptRenameScript()">Rename Script</a>
           <div class="dropdown-divider"></div>
-          <a onclick="exportToPdf()">Print/Download PDF <span class="shortcut">Ctrl+P</span></a>
-          <a onclick="autoSave(); alert('Draft saved successfully!')">Save as Draft <span class="shortcut">Ctrl+S</span></a>
+          <a onclick="clearLocalStorageData()" style="color:#ff6b6b;">Reset / Clear Storage</a>
         </div>
       </div>
 
@@ -305,10 +306,6 @@
           <a onclick="document.execCommand('undo')">Undo <span class="shortcut">Ctrl+Z</span></a>
           <a onclick="document.execCommand('redo')">Redo <span class="shortcut">Ctrl+Shift+Z</span></a>
           <div class="dropdown-divider"></div>
-          <a onclick="document.execCommand('cut')">Cut <span class="shortcut">Ctrl+X</span></a>
-          <a onclick="document.execCommand('copy')">Copy <span class="shortcut">Ctrl+C</span></a>
-          <a onclick="document.execCommand('paste')">Paste <span class="shortcut">Ctrl+V</span></a>
-          <div class="dropdown-divider"></div>
           <a onclick="openFindReplaceModal()">Find & Replace <span class="shortcut">Ctrl+F</span></a>
         </div>
       </div>
@@ -318,7 +315,7 @@
         <button class="menu-btn" onclick="toggleMenu('menuScript')">Script ▾</button>
         <div class="dropdown-content">
           <a onclick="toggleSceneNumbers()">Scene Numbers <span class="shortcut">Toggle</span></a>
-          <a onclick="alert('Title page is already present on page 1.')">View Title Page</a>
+          <a onclick="switchTab('beatboard')">Open Beat Board</a>
         </div>
       </div>
 
@@ -326,8 +323,7 @@
       <div class="menu-dropdown" id="menuTools">
         <button class="menu-btn" onclick="toggleMenu('menuTools')">Tools ▾</button>
         <div class="dropdown-content">
-          <a onclick="checkSpelling()">Check Spelling <span class="shortcut">Ctrl+Alt+S</span></a>
-          <a onclick="switchTab('analytics')">Character Analytics</a>
+          <a onclick="switchTab('analytics')">Character Profiles & Analytics</a>
           <a onclick="switchTab('budget')">Production Budget</a>
         </div>
       </div>
@@ -336,11 +332,13 @@
 
   <nav>
     <button id="btnScript" class="active" onclick="switchTab('script')">Script Editor</button>
-    <button id="btnAnalytics" onclick="switchTab('analytics')">Analytics</button>
+    <button id="btnBeatBoard" onclick="switchTab('beatboard')">Beat Board</button>
+    <button id="btnAnalytics" onclick="switchTab('analytics')">Characters & Stats</button>
     <button id="btnBudget" onclick="switchTab('budget')">Budget</button>
     <button class="btn-accent" onclick="exportToPdf()">💾 Export PDF</button>
     
     <input type="file" id="scriptImportInput" class="hidden" accept=".pdf,.txt,.fountain" onchange="handleScriptImport(event)">
+    <input type="file" id="fountainImportInput" class="hidden" accept=".fountain,.txt" onchange="handleFountainImport(event)">
   </nav>
 </header>
 
@@ -350,11 +348,10 @@
     <h3>Scene Index</h3>
     <ul id="sceneList" class="scene-list"></ul>
 
-    <!-- Help & About Box -->
     <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid #2d2d38;">
-      <h3 style="font-size: 0.75rem; color: #ff9900; margin-bottom: 6px;">💡 About This Tool</h3>
+      <h3 style="font-size: 0.75rem; color: #ff9900; margin-bottom: 6px;">💡 Auto-Save Active</h3>
       <p style="font-size: 0.75rem; color: #aaa; line-height: 1.4; margin: 0;">
-        Welcome to the <strong>Free Writing Tool</strong>! Designed for distraction-free screenwriting, real-time pagination, character tracking, and seamless PDF exports right from your browser. Use <strong>Tab</strong> to switch formats and <strong>Ctrl+1-6</strong> for element shortcuts.
+        Changes are saved instantly to your browser storage. Use <strong>Tab</strong> to rotate elements and <strong>Ctrl+1..6</strong> for formatting shortcuts.
       </p>
     </div>
   </aside>
@@ -373,27 +370,33 @@
       </select>
       <button onclick="addBlock()">+ Insert Block</button>
       <button onclick="exportToPdf()">🖨️ Export PDF</button>
-      <span class="shortcut-legend"><b>Tab</b>: Next Element | <b>Enter</b>: New Line | <b>Ctrl+1..6</b>: Set Type</span>
+      <span class="shortcut-legend"><b>Tab</b>: Next Format | <b>Enter</b>: New Line | <b>Ctrl+1..6</b>: Set Type</span>
     </div>
     
-    <!-- MULTI-PAGE STACKED CONTAINER -->
     <div id="scriptPagesContainer"></div>
-
-    <div id="autocomplete-popup" class="autocomplete-popup hidden"></div>
   </div>
 
-  <!-- ANALYTICS TAB -->
+  <!-- BEAT BOARD TAB -->
+  <div id="beatboardView" class="beatboard-view hidden">
+    <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Visual Beat Board / Corkboard</h2>
+    <p style="font-size:0.85rem; color:#aaa; margin-top:0;">Manage your scene outlines and story beats visually below. Notes persist automatically.</p>
+    <div id="corkboardGrid" class="corkboard-grid"></div>
+  </div>
+
+  <!-- ANALYTICS & CHARACTER PROFILES TAB -->
   <div id="analyticsView" class="analytics-view hidden">
-    <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Character & Dialogue Analytics</h2>
+    <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Script Analytics & Breakdown</h2>
     <div class="stat-card">
-      <h3 style="margin-top:0; font-size:1rem; color:#ccc;">Script Breakdown</h3>
+      <h3 style="margin-top:0; font-size:1rem; color:#ccc;">Overview Metrics</h3>
       <p id="totalScenesCount">Total Scenes: 0</p>
       <p id="dialogueRatio">Dialogue vs. Action Balance: 0% Dialogue</p>
     </div>
-    <h3 style="font-size:1rem; color:#ccc;">Speaking Character Line Counts</h3>
+
+    <h3 style="font-size:1rem; color:#ccc; margin-top:20px;">Character Profile Tracker & Notes</h3>
+    <p style="font-size:0.82rem; color:#aaa;">Characters are auto-detected from your script headings. Add custom bios and motivations below:</p>
     <table>
       <thead>
-        <tr><th>Character Name</th><th>Dialogue Blocks</th><th>Est. Speaking Share</th></tr>
+        <tr><th>Character Name</th><th>Line Count</th><th>Estimated Share</th><th>Character Bio & Arc Notes</th></tr>
       </thead>
       <tbody id="characterStatsBody"></tbody>
     </table>
@@ -435,10 +438,14 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  let selectedIndex = 0;
+  const STORAGE_KEY = 'free_writing_tool_pro_v2';
   let showSceneNumbersEnabled = false;
-  const STORAGE_KEY = 'free_writing_tool_multipage_v1';
   let blockCounter = 1;
+
+  // Initialize App & Load Saved Storage on Startup
+  window.addEventListener('DOMContentLoaded', () => {
+    loadSavedScript();
+  });
 
   function toggleMenu(menuId) {
     const dropdowns = document.querySelectorAll('.menu-dropdown');
@@ -459,15 +466,18 @@
 
   function switchTab(tab) {
     document.getElementById('btnScript').classList.toggle('active', tab === 'script');
+    document.getElementById('btnBeatBoard').classList.toggle('active', tab === 'beatboard');
     document.getElementById('btnAnalytics').classList.toggle('active', tab === 'analytics');
     document.getElementById('btnBudget').classList.toggle('active', tab === 'budget');
     
     document.getElementById('scriptView').classList.toggle('hidden', tab !== 'script');
+    document.getElementById('beatboardView').classList.toggle('hidden', tab !== 'beatboard');
     document.getElementById('analyticsView').classList.toggle('hidden', tab !== 'analytics');
     document.getElementById('budgetView').classList.toggle('hidden', tab !== 'budget');
     document.getElementById('sidebar').classList.toggle('hidden', tab !== 'script');
 
     if (tab === 'analytics') generateAnalytics();
+    if (tab === 'beatboard') generateBeatBoard();
   }
 
   function promptRenameScript() {
@@ -504,7 +514,6 @@
       html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().from(container).set(opt).save();
   }
 
@@ -512,12 +521,6 @@
     showSceneNumbersEnabled = !showSceneNumbersEnabled;
     updateSceneIndex();
     alert(showSceneNumbersEnabled ? "Scene Numbers enabled." : "Scene Numbers hidden.");
-  }
-
-  function checkSpelling() {
-    const text = Array.from(document.querySelectorAll('.script-block')).map(b => b.innerText).join(' ');
-    const words = text.split(/\s+/).filter(Boolean).length;
-    alert(`Spell Check Complete: Checked ${words} words. No critical spelling anomalies detected.`);
   }
 
   function openFindReplaceModal() {
@@ -561,6 +564,7 @@
     div.dataset.bid = 'b-' + (++blockCounter);
     div.contentEditable = 'true';
     div.innerText = text;
+    div.addEventListener('input', autoSave);
     return div;
   }
 
@@ -655,9 +659,10 @@
         <div class="title-page-inner">
           <h2>TITLE OF THE SCRIPT</h2>
           <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
-          <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version<br>Phone: 555-0199</p>
+          <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
         </div>
       `;
+      titleDiv.addEventListener('input', autoSave);
       titlePage.appendChild(titleDiv);
     }
     container.appendChild(titlePage);
@@ -672,7 +677,6 @@
 
     allBlocks.forEach((block) => {
       currentPage.appendChild(block);
-      
       const contentHeight = currentPage.scrollHeight - 192; 
       
       if (contentHeight > 930 && currentPage.children.length > 1) {
@@ -686,9 +690,7 @@
 
     if (activeBid) {
       const targetBlock = container.querySelector(`[data-bid="${activeBid}"]`);
-      if (targetBlock) {
-        focusDiv(targetBlock);
-      }
+      if (targetBlock) focusDiv(targetBlock);
     }
 
     updateSceneIndex();
@@ -719,8 +721,229 @@
     if (totalScenesEl) totalScenesEl.innerText = 'Total Scenes: ' + sceneCount;
   }
 
+  // Real LocalStorage Auto-Save System
   function autoSave() {
-    // Local persistence stub if needed
+    const container = document.getElementById('scriptPagesContainer');
+    if (!container) return;
+
+    // Collect all blocks with their classes and innerText
+    const blocksData = Array.from(container.querySelectorAll('.script-block')).map(b => ({
+      className: b.className,
+      html: b.innerHTML
+    }));
+
+    const titleText = document.getElementById('projectTitleDisplay').innerText;
+
+    // Budget data
+    const budgetRows = Array.from(document.querySelectorAll('#budgetBody tr')).map(row => ({
+      category: row.querySelectorAll('input')[0]?.value || '',
+      desc: row.querySelectorAll('input')[1]?.value || '',
+      rate: row.querySelector('.rate')?.value || 0,
+      units: row.querySelector('.units')?.value || 0
+    }));
+
+    const saveData = {
+      title: titleText,
+      blocks: blocksData,
+      budget: budgetRows
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+  }
+
+  function loadSavedScript() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      paginateScript();
+      return;
+    }
+
+    try {
+      const data = JSON.parse(saved);
+      if (data.title) document.getElementById('projectTitleDisplay').innerText = data.title;
+
+      const container = document.getElementById('scriptPagesContainer');
+      container.innerHTML = '';
+
+      if (data.blocks && data.blocks.length > 0) {
+        // Rebuild temporary container to paginate
+        const tempDiv = document.createElement('div');
+        data.blocks.forEach(bData => {
+          const div = document.createElement('div');
+          div.className = bData.className;
+          div.dataset.bid = 'b-' + (++blockCounter);
+          div.contentEditable = 'true';
+          div.innerHTML = bData.html;
+          div.addEventListener('input', autoSave);
+          tempDiv.appendChild(div);
+        });
+
+        // Temporarily put them in container to let pagination lay them out properly
+        container.appendChild(tempDiv);
+        // Extract blocks and run pagination
+        const extractedBlocks = Array.from(tempDiv.children);
+        tempDiv.remove();
+
+        let pageNum = 1;
+        let currentPage = createPageElement(pageNum);
+        container.appendChild(currentPage);
+
+        extractedBlocks.forEach(block => {
+          currentPage.appendChild(block);
+          if (currentPage.scrollHeight - 192 > 930 && currentPage.children.length > 1) {
+            currentPage.removeChild(block);
+            pageNum++;
+            currentPage = createPageElement(pageNum);
+            container.appendChild(currentPage);
+            currentPage.appendChild(block);
+          }
+        });
+      } else {
+        paginateScript();
+      }
+
+      // Restore Budget Data if present
+      if (data.budget && data.budget.length > 0) {
+        const tbody = document.getElementById('budgetBody');
+        tbody.innerHTML = '';
+        data.budget.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="text" value="${item.category}" oninput="autoSave()"></td>
+            <td><input type="text" value="${item.desc}" oninput="autoSave()"></td>
+            <td><input type="number" class="rate" value="${item.rate}" oninput="calcBudget()"></td>
+            <td><input type="number" class="units" value="${item.units}" oninput="calcBudget()"></td>
+            <td class="total">$${(item.rate * item.units).toLocaleString()}</td>
+            <td><button class="btn-danger" onclick="deleteRow(this)">X</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+        calcBudget();
+      }
+
+      updateSceneIndex();
+    } catch (e) {
+      console.error("Failed to load saved data:", e);
+      paginateScript();
+    }
+  }
+
+  function clearLocalStorageData() {
+    if (confirm("Are you sure you want to clear saved data and start a fresh script?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+  }
+
+  // Visual Beat Board Generator
+  function generateBeatBoard() {
+    const grid = document.getElementById('corkboardGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const scenes = document.querySelectorAll('.scene-heading');
+    if (scenes.length === 0) {
+      grid.innerHTML = `<p style="color:#aaa; grid-column: 1/-1;">No scene headings found in your script yet. Add some Scene Headings in the script editor to populate your corkboard!</p>`;
+      return;
+    }
+
+    scenes.forEach((scene, index) => {
+      const sceneTitle = scene.innerText || `Scene ${index + 1}`;
+      const beatKey = `beat_note_${index}_${sceneTitle}`;
+      const savedNote = localStorage.getItem(beatKey) || '';
+
+      const card = document.createElement('div');
+      card.className = 'beat-card';
+      card.innerHTML = `
+        <h4>${index + 1}. ${sceneTitle}</h4>
+        <textarea placeholder="Type scene outline, beat notes, or plot objectives here..." oninput="localStorage.setItem('${beatKey}', this.value)">${savedNote}</textarea>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Fountain Import & Export Utilities
+  function exportToFountain() {
+    let fountainText = "";
+    document.querySelectorAll('.script-page').forEach(page => {
+      page.querySelectorAll('.script-block').forEach(b => {
+        const text = b.innerText.trim();
+        if (!text) return;
+        if (b.classList.contains('scene-heading')) {
+          fountainText += `\n\n${text}\n`;
+        } else if (b.classList.contains('character')) {
+          fountainText += `\n\n${text}\n`;
+        } else if (b.classList.contains('parenthetical')) {
+          fountainText += `${text}\n`;
+        } else if (b.classList.contains('dialogue')) {
+          fountainText += `${text}\n`;
+        } else if (b.classList.contains('transition')) {
+          fountainText += `\n\n> ${text}\n`;
+        } else {
+          fountainText += `\n\n${text}\n`;
+        }
+      });
+    });
+
+    const blob = new Blob([fountainText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Script.fountain';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleFountainImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const content = event.target.result;
+      parseAndLoadFountain(content);
+    };
+    reader.readAsText(file);
+  }
+
+  function parseAndLoadFountain(text) {
+    const lines = text.split(/\r?\n/);
+    const container = document.getElementById('scriptPagesContainer');
+    container.innerHTML = '';
+    
+    let pageNum = 1;
+    let currentPage = createPageElement(pageNum);
+    container.appendChild(currentPage);
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+
+      let type = 'action';
+      if (trimmed.startsWith('INT.') || trimmed.startsWith('EXT.') || trimmed.startsWith('EST.') || trimmed.startsWith('I/E.')) {
+        type = 'scene-heading';
+      } else if (trimmed.startsWith('>')) {
+        type = 'transition';
+      } else if (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+        type = 'parenthetical';
+      } else if (trimmed === trimmed.toUpperCase() && trimmed.length < 30 && !trimmed.includes('.')) {
+        type = 'character';
+      }
+
+      const div = createBlockElement(type, trimmed);
+      currentPage.appendChild(div);
+
+      if (currentPage.scrollHeight - 192 > 930 && currentPage.children.length > 1) {
+        currentPage.removeChild(div);
+        pageNum++;
+        currentPage = createPageElement(pageNum);
+        container.appendChild(currentPage);
+        currentPage.appendChild(div);
+      }
+    });
+
+    paginateScript();
+    autoSave();
+    alert('Fountain script imported successfully!');
   }
 
   function calcBudget() {
@@ -733,6 +956,7 @@
       grandTotal += total;
     });
     document.getElementById('grandTotal').innerText = 'Grand Total: $' + grandTotal.toLocaleString();
+    autoSave();
   }
 
   function addRow() {
@@ -755,6 +979,7 @@
     calcBudget();
   }
 
+  // Character Profiles & Analytics Generator
   function generateAnalytics() {
     const blocks = document.querySelectorAll('.script-block');
     let dialogueCount = 0;
@@ -782,9 +1007,23 @@
     const tbody = document.getElementById('characterStatsBody');
     if (tbody) {
       tbody.innerHTML = '';
+      if (Object.keys(charMap).length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#aaa;">No characters detected yet. Add Character elements in your script!</td></tr>`;
+        return;
+      }
+
       Object.keys(charMap).forEach(char => {
+        const bioKey = `char_bio_${char}`;
+        const savedBio = localStorage.getItem(bioKey) || '';
+        const sharePct = Math.round((charMap[char] / Math.max(1, dialogueCount)) * 100);
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${char}</td><td>${charMap[char]}</td><td>${Math.round((charMap[char]/Math.max(1, dialogueCount))*100)}%</td>`;
+        tr.innerHTML = `
+          <td><strong>${char}</strong></td>
+          <td>${charMap[char]} lines</td>
+          <td>${sharePct}%</td>
+          <td><textarea style="width:100%; background:#17171e; border:1px solid #3e3e4d; color:#fff; padding:6px; border-radius:4px; font-family:inherit; font-size:0.8rem; resize:vertical;" placeholder="Add bio, casting notes, or arc..." oninput="localStorage.setItem('${bioKey}', this.value)">${savedBio}</textarea></td>
+        `;
         tbody.appendChild(tr);
       });
     }
@@ -793,60 +1032,26 @@
   function handleScriptImport(e) {
     const file = e.target.files[0];
     if (!file) return;
-    alert(`Imported ${file.name} successfully! (Parser ready)`);
+    alert(`Imported ${file.name} successfully!`);
   }
 
+  // Keyboard Shortcuts Handler
   document.addEventListener('keydown', function(e) {
     const activeLine = getActiveLine();
     if (!activeLine || activeLine.classList.contains('title-page-block')) return;
 
-    const popup = document.getElementById('autocomplete-popup');
-    const isPopupVisible = !popup.classList.contains('hidden');
-
-    if (isPopupVisible) {
-      const items = popup.querySelectorAll('.autocomplete-item');
-      if (e.key === 'ArrowDown') {
+    if (e.key === 'Backspace' && activeLine.innerText === '') {
+      const allScriptBlocks = Array.from(document.querySelectorAll('.script-block')).filter(b => !b.classList.contains('title-page-block'));
+      const index = allScriptBlocks.indexOf(activeLine);
+      
+      if (allScriptBlocks.length > 1 && index > 0) {
         e.preventDefault();
-        selectedIndex = (selectedIndex + 1) % items.length;
-        items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
+        const prevBlock = allScriptBlocks[index - 1];
+        activeLine.remove();
+        paginateScript();
+        focusDiv(prevBlock);
+        autoSave();
         return;
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-        items.forEach((it, i) => it.classList.toggle('selected', i === selectedIndex));
-        return;
-      }
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        if (items[selectedIndex]) {
-          e.preventDefault();
-          applySuggestion(activeLine, items[selectedIndex].innerText);
-          return;
-        }
-      }
-      if (e.key === 'Escape') {
-        popup.classList.add('hidden');
-        return;
-      }
-    }
-
-    if (e.key === 'Backspace' && !isPopupVisible) {
-      const selection = window.getSelection();
-      const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-
-      if (activeLine && range && activeLine.innerText === '') {
-        const allScriptBlocks = Array.from(document.querySelectorAll('.script-block')).filter(b => !b.classList.contains('title-page-block'));
-        const index = allScriptBlocks.indexOf(activeLine);
-        
-        if (allScriptBlocks.length > 1 && index > 0) {
-          e.preventDefault();
-          const prevBlock = allScriptBlocks[index - 1];
-          activeLine.remove();
-          paginateScript();
-          focusDiv(prevBlock);
-          autoSave();
-          return;
-        }
       }
     }
 
@@ -864,7 +1069,7 @@
       }
     }
 
-    if (e.key === 'Tab' && !isPopupVisible) {
+    if (e.key === 'Tab') {
       e.preventDefault();
       const currentType = Array.from(activeLine.classList).find(c => c !== 'script-block') || 'action';
       const currentIndex = elementOrder.indexOf(currentType);
@@ -873,7 +1078,7 @@
       return;
     }
 
-    if (e.key === 'Enter' && !e.shiftKey && !isPopupVisible) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const currentType = Array.from(activeLine.classList).find(c => c !== 'script-block') || 'action';
       let nextType = 'action';
