@@ -716,7 +716,6 @@
     return page;
   }
 
-  // Debounced Reflow to prevent typing stutter or focus loss
   function debouncedReflow() {
     clearTimeout(reflowTimer);
     reflowTimer = setTimeout(() => {
@@ -735,7 +734,8 @@
       pages = [p];
     }
 
-    const maxHeight = 760; 
+    // Increased maxHeight from 760 to 850 so it respects standard 11in page limits
+    const maxHeight = 850; 
 
     // 1. Push overflow blocks down
     for (let i = 0; i < pages.length; i++) {
