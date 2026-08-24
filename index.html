@@ -1187,6 +1187,12 @@
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+
+      // Safeguard: Prevent runaway block spam if the current line is completely empty
+      if (activeLine.innerText.trim() === '') {
+        return;
+      }
+
       const currentType = Array.from(activeLine.classList).find(c => c !== 'script-block') || 'action';
       let nextType = 'action';
       if (currentType === 'scene-heading') nextType = 'action';
