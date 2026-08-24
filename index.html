@@ -274,7 +274,7 @@
           <a onclick="exportToFountain()">Export Fountain (.fountain) <span class="shortcut">Ftn</span></a>
           <div class="dropdown-divider"></div>
           <a onclick="exportToPdf()">Export Script (.pdf) <span class="shortcut">PDF</span></a>
-          <a onclick="openSyncModal()" style="color:#ff9900; font-weight:bold;">📱 Cloud Sync (Phone/PC)</a>
+          <a onclick="openSyncModal()" style="color:#ff9900; font-weight:bold;">📱 Cloud Sync (PC)</a>
           <div class="dropdown-divider"></div>
           <a onclick="promptAddEpisode()">Add Episode / Act</a>
           <a onclick="promptRenameScript()">Rename Script</a>
@@ -426,7 +426,7 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v7';
+  const STORAGE_KEY = 'free_writing_tool_pro_v8';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
   let reflowTimer = null;
@@ -551,9 +551,9 @@
     const modalHtml = `
       <div class="modal-overlay" id="syncModal">
         <div class="modal">
-          <h3>📱 Cross-Device Cloud Sync</h3>
+          <h3>📱 Cloud Sync</h3>
           <p style="font-size: 0.8rem; color: #aaa; margin-top: 0;">
-            Copy this code to transfer your script to your other device, or paste a sync code below:
+            Copy this code to transfer your script across sessions, or paste a saved sync code below:
           </p>
           <label style="font-size:0.75rem; color:#ff9900;">Your Current Sync Code:</label>
           <textarea id="modalSyncTextarea" readonly onclick="this.select()">${currentCode}</textarea>
@@ -619,7 +619,6 @@
     const scriptTitle = document.getElementById('projectTitleDisplay').innerText.replace('🎬 ', '');
     page.dataset.headerText = `${scriptTitle.toUpperCase()} — P. ${pageNum}`;
 
-    // Click anywhere on page to add & focus an action block at that vertical coordinate
     page.addEventListener('click', function(e) {
       if (e.target === page || e.target.classList.contains('script-page')) {
         const blocks = Array.from(page.querySelectorAll('.script-block'));
@@ -736,7 +735,7 @@
     clearTimeout(reflowTimer);
     reflowTimer = setTimeout(() => {
       checkPageOverflow();
-    }, 200);
+    }, 250);
   }
 
   function checkPageOverflow() {
@@ -750,14 +749,14 @@
       pages = [p];
     }
 
-    const maxHeight = 850; 
+    // Set to letter page content limit (approx 960px usable height)
+    const maxHeight = 960; 
 
     // 1. Push overflow blocks down onto next pages
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       while (page.scrollHeight > maxHeight && page.children.length > 0) {
         const lastBlock = page.lastElementChild;
-        // Don't push if it's the only element left and moving it would make page empty in a loop
         if (page.children.length === 1) break; 
 
         let nextNearbyPage = pages[i + 1];
