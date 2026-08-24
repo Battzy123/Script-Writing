@@ -748,7 +748,6 @@
     allBlocks.forEach((block) => {
       currentPage.appendChild(block);
       
-      // Check if page height exceeds standard printable content area (~1100px)
       if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
         currentPage.removeChild(block);
         pageNum++;
@@ -866,11 +865,42 @@
         const extractedBlocks = Array.from(tempDiv.children);
         tempDiv.remove();
 
+        // Separate out title page block from regular script blocks
+        const titleBlockData = extractedBlocks.find(b => b.classList.contains('title-page-block'));
+        const regularBlocks = extractedBlocks.filter(b => !b.classList.contains('title-page-block'));
+
+        // 1. Recreate Title Sheet Page
+        const titlePage = document.createElement('div');
+        titlePage.className = 'script-page title-sheet';
+        if (titleBlockData) {
+          titlePage.appendChild(titleBlockData);
+        } else {
+          const titleDiv = document.createElement('div');
+          titleDiv.className = 'title-page-block script-block';
+          titleDiv.dataset.bid = 'b-' + (++blockCounter);
+          titleDiv.contentEditable = 'true';
+          titleDiv.innerHTML = `
+            <div class="title-page-inner">
+              <h2>TITLE OF THE SCRIPT</h2>
+              <p style="margin-bottom: 2in;">Written by<br>Your Name Here</p>
+              <p style="font-size: 10pt; color: #555;">Contact Info / Draft Version</p>
+            </div>
+          `;
+          titleDiv.addEventListener('input', autoSave);
+          titlePage.appendChild(titleDiv);
+        }
+        container.appendChild(titlePage);
+
+        // 2. Paginate Regular Script Blocks
+        if (regularBlocks.length === 0) {
+          regularBlocks.push(createBlockElement('action', ''));
+        }
+
         let pageNum = 1;
         let currentPage = createPageElement(pageNum);
         container.appendChild(currentPage);
 
-        extractedBlocks.forEach(block => {
+        regularBlocks.forEach(block => {
           currentPage.appendChild(block);
           if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
             currentPage.removeChild(block);
