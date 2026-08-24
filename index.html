@@ -160,7 +160,8 @@
     background: #ffffff;
     color: #000000;
     width: 8.27in;
-    height: 11.69in;
+    min-height: 11.69in;
+    height: auto;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     border-radius: 2px;
     position: relative;
@@ -168,7 +169,6 @@
     font-family: "Courier Prime", "Courier New", Courier, monospace;
     font-size: 12pt;
     line-height: 1.5;
-    overflow: hidden;
   }
   .script-page div { min-height: 1.5em; outline: none; }
 
@@ -186,7 +186,7 @@
 
   .title-page-block {
     text-align: center;
-    height: 9.3in;
+    min-height: 9.3in;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -270,7 +270,7 @@
     .editor-view, .budget-view, .analytics-view, .beatboard-view { padding: 10px; overflow-y: visible; }
     #scriptPagesContainer { width: 100% !important; margin: 0 auto; gap: 20px; }
     .script-page { width: 100% !important; height: auto !important; min-height: 480px; padding: 1rem !important; font-size: 11pt; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    .title-page-block { height: auto !important; min-height: 400px; }
+    .title-page-block { min-height: 400px !important; }
     .toolbar { width: 100%; margin-left: 0; margin-right: 0; }
     .shortcut-legend { display: none; }
     header { padding: 8px 10px; }
@@ -283,7 +283,7 @@
     .container { overflow: visible; display: block; }
     .editor-view { padding: 0; overflow: visible; }
     #scriptPagesContainer { width: 100%; gap: 0; }
-    .script-page { box-shadow: none; margin: 0; page-break-after: always; height: auto; }
+    .script-page { box-shadow: none; margin: 0; page-break-after: always; min-height: 11.69in; }
     .scene-heading { background-color: transparent !important; padding: 0; }
   }
 </style>
@@ -747,9 +747,9 @@
 
     allBlocks.forEach((block) => {
       currentPage.appendChild(block);
-      const contentHeight = currentPage.scrollHeight - 192; 
       
-      if (contentHeight > 930 && currentPage.children.length > 1) {
+      // Check if page height exceeds standard printable content area (~1100px)
+      if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
         currentPage.removeChild(block);
         pageNum++;
         currentPage = createPageElement(pageNum);
@@ -872,7 +872,7 @@
 
         extractedBlocks.forEach(block => {
           currentPage.appendChild(block);
-          if (currentPage.scrollHeight - 192 > 930 && currentPage.children.length > 1) {
+          if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
             currentPage.removeChild(block);
             pageNum++;
             currentPage = createPageElement(pageNum);
@@ -1011,7 +1011,7 @@
       const div = createBlockElement(type, trimmed);
       currentPage.appendChild(div);
 
-      if (currentPage.scrollHeight - 192 > 930 && currentPage.children.length > 1) {
+      if (currentPage.offsetHeight > 1100 && currentPage.children.length > 1) {
         currentPage.removeChild(div);
         pageNum++;
         currentPage = createPageElement(pageNum);
