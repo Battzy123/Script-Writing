@@ -160,7 +160,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 40px; /* Gap between physical pages */
+    gap: 40px;
   }
 
   /* Physical Page Sheet */
@@ -392,7 +392,7 @@
         </div>
       </div>
       <div id="scriptPagesContainer" style="display:flex; flex-direction:column; gap:40px; width:100%; align-items:center;">
-        <!-- Dynamic Script Pages Will Render Here -->
+        <div class="script-page" data-page-index="1"></div>
       </div>
     </div>
   </div>
@@ -458,7 +458,7 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v4';
+  const STORAGE_KEY = 'free_writing_tool_pro_v5';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
 
@@ -504,7 +504,7 @@
     if (newName) {
       document.getElementById('projectTitleDisplay').innerText = '🎬 ' + newName.toUpperCase();
       autoSave();
-      renderPages();
+      checkPageOverflow();
     }
   }
 
@@ -516,9 +516,10 @@
       if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
         activeLine.after(div);
       } else {
-        document.querySelector('.script-page').appendChild(div);
+        let firstPage = document.querySelector('#scriptPagesContainer .script-page');
+        if (firstPage) firstPage.appendChild(div);
       }
-      renderPages();
+      checkPageOverflow();
       focusDiv(div);
       autoSave();
     }
@@ -651,18 +652,18 @@
     if (activeLine && activeLine !== document.getElementById('titlePageBlock')) {
       activeLine.after(newDiv);
     } else {
-      let firstPage = document.querySelector('.script-page');
+      let firstPage = document.querySelector('#scriptPagesContainer .script-page');
       if (!firstPage) {
         firstPage = createNewPageSheet(1);
-        document.getElementById('scriptContainerWrapper').appendChild(firstPage);
+        document.getElementById('scriptPagesContainer').appendChild(firstPage);
       }
       firstPage.appendChild(newDiv);
     }
 
+    checkPageOverflow();
     focusDiv(newDiv);
     updateSceneIndex();
     autoSave();
-    checkPageOverflow();
   }
 
   function focusDiv(el) {
@@ -737,37 +738,66 @@
     return page;
   }
 
+  // Incremental, Non-Destructive Pagination Loop (Keeps Cursor Focus Stable)
   function checkPageOverflow() {
-    // Basic automatic pagination reflow across physical pages
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
 
-    // Gather all script blocks across pages
-    const allBlocks = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock');
-    if (allBlocks.length === 0) return;
+    let pages = Array.from(container.querySelectorAll('.script-page'));
+    if (pages.length === 0) {
+      const p = createNewPageSheet(1);
+      container.appendChild(p);
+      pages = [p];
+    }
 
-    container.innerHTML = '';
-    let currentPage = createNewPageSheet(2);
-    container.appendChild(currentPage);
+    const maxHeight = 750; // Printable height threshold in pixels
 
-    let pageHeightLimit = 750; // approximate pixel height per page sheet content area
-    let currentHeight = 0;
-
-    allBlocks.forEach(block => {
-      // Temporarily append to measure height
-      currentPage.appendChild(block);
-      let blockH = block.offsetHeight || 30;
-      currentHeight += blockH;
-
-      if (currentHeight > pageHeightLimit) {
-        // Move to next page
-        currentPage.removeChild(block);
-        const pageNum = container.querySelectorAll('.script-page').length + 2;
-        currentPage = createNewPageSheet(pageNum);
-        container.appendChild(currentPage);
-        currentPage.appendChild(block);
-        currentHeight = blockH;
+    // 1. Push overflow blocks down to subsequent pages
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      while (page.scrollHeight > maxHeight && page.children.length > 1) {
+        const lastBlock = page.lastElementChild;
+        let nextNearbyPage = pages[i + 1];
+        if (!nextNearbyPage) {
+          nextNearbyPage = createNewPageSheet(pages.length + 1);
+          container.appendChild(nextNearbyPage);
+          pages.push(nextNearbyPage);
+        }
+        nextNearbyPage.insertBefore(lastBlock, nextNearbyPage.firstChild);
       }
+    }
+
+    // 2. Pull content back up if space permits
+    pages = Array.from(container.querySelectorAll('.script-page'));
+    for (let i = 0; i < pages.length - 1; i++) {
+      const page = pages[i];
+      const nextPage = pages[i + 1];
+      if (nextPage && nextPage.children.length > 0) {
+        const firstBlockOfNext = nextPage.firstElementChild;
+        page.appendChild(firstBlockOfNext);
+        if (page.scrollHeight <= maxHeight) {
+          // Fits cleanly
+        } else {
+          // Put it back
+          nextPage.insertBefore(firstBlockOfNext, nextPage.firstChild);
+        }
+      }
+    }
+
+    // 3. Clean up empty trailing pages
+    pages = Array.from(container.querySelectorAll('.script-page'));
+    for (let i = 1; i < pages.length; i++) {
+      if (pages[i].children.length === 0) {
+        pages[i].remove();
+      }
+    }
+
+    // 4. Update Running Headers dynamically
+    Array.from(container.querySelectorAll('.script-page')).forEach((p, idx) => {
+      const pageNum = idx + 1;
+      const scriptTitle = document.getElementById('projectTitleDisplay').innerText.replace('🎬 ', '');
+      p.className = pageNum > 1 ? 'script-page has-running-header' : 'script-page';
+      p.dataset.headerText = `${scriptTitle.toUpperCase()} — P. ${pageNum}`;
     });
   }
 
@@ -821,10 +851,12 @@
     const container = document.getElementById('scriptPagesContainer');
     const titleBlock = document.getElementById('titlePageBlock');
     
+    container.innerHTML = '';
+    const firstPage = createNewPageSheet(1);
+    container.appendChild(firstPage);
+
     if (!saved) {
-      const firstPage = createNewPageSheet(2);
       firstPage.appendChild(createBlockElement('action', ''));
-      container.appendChild(firstPage);
       updateSceneIndex();
       return;
     }
@@ -833,10 +865,6 @@
       const data = JSON.parse(saved);
       if (data.title) document.getElementById('projectTitleDisplay').innerText = data.title;
       if (data.titlePage && titleBlock) titleBlock.innerHTML = data.titlePage;
-
-      container.innerHTML = '';
-      const firstPage = createNewPageSheet(2);
-      container.appendChild(firstPage);
 
       if (data.blocks && data.blocks.length > 0) {
         data.blocks.forEach(bData => {
@@ -877,9 +905,7 @@
       updateSceneIndex();
       checkPageOverflow();
     } catch (e) {
-      const firstPage = createNewPageSheet(2);
       firstPage.appendChild(createBlockElement('action', ''));
-      container.appendChild(firstPage);
       updateSceneIndex();
     }
   }
@@ -889,10 +915,6 @@
       localStorage.removeItem(STORAGE_KEY);
       location.reload();
     }
-  }
-
-  function renderPages() {
-    checkPageOverflow();
   }
 
   function generateBeatBoard() {
@@ -968,7 +990,7 @@
     const lines = text.split(/\r?\n/);
     const container = document.getElementById('scriptPagesContainer');
     container.innerHTML = '';
-    const firstPage = createNewPageSheet(2);
+    const firstPage = createNewPageSheet(1);
     container.appendChild(firstPage);
     
     lines.forEach(line => {
@@ -1148,10 +1170,10 @@
 
       const newDiv = createBlockElement(nextType, nextType === 'scene-heading' ? 'INT. ' : '');
       activeLine.after(newDiv);
+      checkPageOverflow();
       focusDiv(newDiv);
       updateSceneIndex();
       autoSave();
-      checkPageOverflow();
       return;
     }
   });
