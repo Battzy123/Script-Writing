@@ -286,8 +286,8 @@
       <div class="menu-dropdown" id="menuEdit">
         <button class="menu-btn" onclick="toggleMenu('menuEdit')">Edit ▾</button>
         <div class="dropdown-content">
-          <a onclick="document.execCommand('undo')">Undo <span class="shortcut">Ctrl+Z</span></a>
-          <a onclick="document.execCommand('redo')">Redo <span class="shortcut">Ctrl+Shift+Z</span></a>
+          <a onclick="undoAction()">Undo <span class="shortcut">Ctrl+Z</span></a>
+          <a onclick="redoAction()">Redo <span class="shortcut">Ctrl+Shift+Z</span></a>
           <div class="dropdown-divider"></div>
           <a onclick="openFindReplaceModal()">Find & Replace <span class="shortcut">Ctrl+F</span></a>
         </div>
@@ -426,10 +426,13 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v8';
+  const STORAGE_KEY = 'free_writing_tool_pro_v9';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
   let reflowTimer = null;
+
+  let undoStack = [];
+  let redoStack = [];
 
   window.addEventListener('DOMContentLoaded', () => {
     loadSavedScript();
@@ -469,6 +472,7 @@
   }
 
   function promptRenameScript() {
+    pushHistoryState();
     const newName = prompt("Enter new script/project title:", document.getElementById('projectTitleDisplay').innerText.replace('🎬 ', ''));
     if (newName) {
       document.getElementById('projectTitleDisplay').innerText = '🎬 ' + newName.toUpperCase();
@@ -478,6 +482,7 @@
   }
 
   function promptAddEpisode() {
+    pushHistoryState();
     const epName = prompt("Enter Episode Name / Act Heading:");
     if (epName) {
       const activeLine = getActiveLine();
@@ -509,7 +514,6 @@
   function toggleSceneNumbers() {
     showSceneNumbersEnabled = !showSceneNumbersEnabled;
     updateSceneIndex();
-    alert(showSceneNumbersEnabled ? "Scene Numbers enabled." : "Scene Numbers hidden.");
   }
 
   function openFindReplaceModal() {
@@ -535,9 +539,10 @@
     const replaceText = document.getElementById('replaceInput').value;
     if (!findText) return;
 
+    pushHistoryState();
     document.querySelectorAll('.script-block').forEach(b => {
-      if (b.innerHTML.includes(findText)) {
-        b.innerHTML = b.innerHTML.replaceAll(findText, replaceText);
+      if (b.innerText.includes(findText)) {
+        b.innerText = b.innerText.replaceAll(findText, replaceText);
       }
     });
 
@@ -621,6 +626,7 @@
 
     page.addEventListener('click', function(e) {
       if (e.target === page || e.target.classList.contains('script-page')) {
+        pushHistoryState();
         const blocks = Array.from(page.querySelectorAll('.script-block'));
         let targetBlock = null;
         for (let b of blocks) {
@@ -646,6 +652,7 @@
   }
 
   function addBlock(typeOverride = null) {
+    pushHistoryState();
     const type = typeOverride || document.getElementById('elementType').value;
     const activeLine = getActiveLine();
     const newDiv = createBlockElement(type, type === 'scene-heading' ? 'INT. ' : '');
@@ -690,6 +697,7 @@
 
   function setLineType(div, newType) {
     if (!div || div.id === 'titlePageBlock') return;
+    pushHistoryState();
     div.className = newType + ' script-block';
     document.getElementById('elementType').value = newType;
     autoSave();
@@ -735,13 +743,44 @@
     clearTimeout(reflowTimer);
     reflowTimer = setTimeout(() => {
       checkPageOverflow();
-    }, 250);
+    }, 300);
+  }
+
+  function saveSelectionOffset() {
+    const active = getActiveLine();
+    if (!active) return null;
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return { bid: active.dataset.bid, offset: 0 };
+    const range = sel.getRangeAt(0);
+    return {
+      bid: active.dataset.bid,
+      offset: range.startOffset
+    };
+  }
+
+  function restoreSelectionOffset(saved) {
+    if (!saved) return;
+    const el = document.querySelector(`[data-bid="${saved.bid}"]`);
+    if (!el) return;
+    el.focus();
+    try {
+      const range = document.createRange();
+      const textNode = el.firstChild || el;
+      range.setStart(textNode, Math.min(saved.offset, textNode.length || 0));
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {
+      focusDiv(el);
+    }
   }
 
   function checkPageOverflow() {
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
 
+    const cursorState = saveSelectionOffset();
     let pages = Array.from(container.querySelectorAll('.script-page'));
     if (pages.length === 0) {
       const p = createNewPageSheet(1);
@@ -749,8 +788,8 @@
       pages = [p];
     }
 
-    // Set to letter page content limit (approx 960px usable height)
-    const maxHeight = 960; 
+    // Usable height threshold for Letter page (1056px total height minus 2in padding = ~900px content area)
+    const maxHeight = 900; 
 
     // 1. Push overflow blocks down onto next pages
     for (let i = 0; i < pages.length; i++) {
@@ -800,13 +839,90 @@
       p.className = pageNum > 1 ? 'script-page has-running-header' : 'script-page';
       p.dataset.headerText = `${scriptTitle.toUpperCase()} — P. ${pageNum}`;
     });
+
+    restoreSelectionOffset(cursorState);
+  }
+
+  function pushHistoryState() {
+    const titleBlock = document.getElementById('titlePageBlock');
+    const state = {
+      title: document.getElementById('projectTitleDisplay').innerText,
+      titlePage: titleBlock ? titleBlock.innerHTML : '',
+      blocks: Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
+        className: b.className,
+        html: b.innerHTML,
+        bid: b.dataset.bid
+      }))
+    };
+    undoStack.push(state);
+    if (undoStack.length > 30) undoStack.shift();
+    redoStack = [];
+  }
+
+  function undoAction() {
+    if (undoStack.length === 0) return;
+    const currentState = {
+      title: document.getElementById('projectTitleDisplay').innerText,
+      titlePage: document.getElementById('titlePageBlock')?.innerHTML || '',
+      blocks: Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
+        className: b.className,
+        html: b.innerHTML,
+        bid: b.dataset.bid
+      }))
+    };
+    redoStack.push(currentState);
+    const prevState = undoStack.pop();
+    restoreState(prevState);
+  }
+
+  function redoAction() {
+    if (redoStack.length === 0) return;
+    const currentState = {
+      title: document.getElementById('projectTitleDisplay').innerText,
+      titlePage: document.getElementById('titlePageBlock')?.innerHTML || '',
+      blocks: Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
+        className: b.className,
+        html: b.innerHTML,
+        bid: b.dataset.bid
+      }))
+    };
+    undoStack.push(currentState);
+    const nextState = redoStack.pop();
+    restoreState(nextState);
+  }
+
+  function restoreState(state) {
+    document.getElementById('projectTitleDisplay').innerText = state.title;
+    if (state.titlePage) document.getElementById('titlePageBlock').innerHTML = state.titlePage;
+    const container = document.getElementById('scriptPagesContainer');
+    container.innerHTML = '';
+    const firstPage = createNewPageSheet(1);
+    container.appendChild(firstPage);
+
+    state.blocks.forEach(bData => {
+      const div = document.createElement('div');
+      div.className = bData.className;
+      div.dataset.bid = bData.bid || ('b-' + (++blockCounter));
+      div.contentEditable = 'true';
+      div.innerHTML = bData.html;
+      div.addEventListener('input', () => {
+        autoSave();
+        updateSceneIndex();
+        debouncedReflow();
+      });
+      firstPage.appendChild(div);
+    });
+    updateSceneIndex();
+    autoSave();
+    checkPageOverflow();
   }
 
   function generateSyncCode() {
     const titleBlock = document.getElementById('titlePageBlock');
     const blocksData = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
       className: b.className,
-      html: b.innerHTML
+      html: b.innerHTML,
+      bid: b.dataset.bid
     }));
     const titleText = document.getElementById('projectTitleDisplay').innerText;
     const titlePageHtml = titleBlock ? titleBlock.innerHTML : '';
@@ -824,7 +940,8 @@
     const titleBlock = document.getElementById('titlePageBlock');
     const blocksData = Array.from(document.querySelectorAll('#scriptContainerWrapper .script-block')).filter(b => b.id !== 'titlePageBlock').map(b => ({
       className: b.className,
-      html: b.innerHTML
+      html: b.innerHTML,
+      bid: b.dataset.bid
     }));
 
     const titleText = document.getElementById('projectTitleDisplay').innerText;
@@ -871,7 +988,7 @@
         data.blocks.forEach(bData => {
           const div = document.createElement('div');
           div.className = bData.className;
-          div.dataset.bid = 'b-' + (++blockCounter);
+          div.dataset.bid = bData.bid || ('b-' + (++blockCounter));
           div.contentEditable = 'true';
           div.innerHTML = bData.html;
           div.addEventListener('input', () => {
@@ -988,6 +1105,7 @@
   }
 
   function parseAndLoadFountain(text) {
+    pushHistoryState();
     const lines = text.split(/\r?\n/);
     const container = document.getElementById('scriptPagesContainer');
     container.innerHTML = '';
@@ -1118,6 +1236,7 @@
       
       if (allScriptBlocks.length > 1 && index > 0) {
         e.preventDefault();
+        pushHistoryState();
         const prevBlock = allScriptBlocks[index - 1];
         activeLine.remove();
         focusDiv(prevBlock);
@@ -1129,6 +1248,16 @@
     }
 
     if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redoAction();
+        } else {
+          undoAction();
+        }
+        return;
+      }
+
       const keyMap = { '1': 'scene-heading', '2': 'action', '3': 'character', '4': 'parenthetical', '5': 'dialogue', '6': 'transition' };
       if (keyMap[e.key]) {
         e.preventDefault();
@@ -1160,6 +1289,7 @@
         return;
       }
 
+      pushHistoryState();
       const currentType = Array.from(activeLine.classList).find(c => c !== 'script-block') || 'action';
       let nextType = 'action';
       if (currentType === 'scene-heading') nextType = 'action';
