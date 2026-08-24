@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free Writing Tool - Pro</title>
-<!-- PDF.js for importing PDFs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- html2pdf.js for exporting real PDF files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   * { box-sizing: border-box; }
@@ -33,7 +31,6 @@
   }
   h1 { margin: 0; font-size: 1.1rem; color: #ff9900; font-weight: 700; letter-spacing: 0.5px; }
   
-  /* Professional Menu Bar Styling */
   .menubar { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
   .menu-dropdown { position: relative; display: inline-block; }
   .menu-btn {
@@ -151,7 +148,6 @@
   }
   .shortcut-legend { font-size: 0.75rem; color: #aaa; margin-left: auto; }
 
-  /* Google Docs / Celtx Style Multi-Page Workspace Container */
   #scriptContainerWrapper {
     width: auto;
     background: transparent;
@@ -163,7 +159,6 @@
     gap: 40px;
   }
 
-  /* Physical Page Sheet */
   .script-page {
     width: 8.5in;
     min-height: 11in;
@@ -180,7 +175,6 @@
     flex-direction: column;
   }
 
-  /* Running Header on pages > 1 */
   .script-page.has-running-header::before {
     content: attr(data-header-text);
     position: absolute;
@@ -192,7 +186,6 @@
 
   .script-block { min-height: 1.5em; outline: none; margin-bottom: 0; }
 
-  /* Title Page Section */
   .title-page-container {
     padding: 2in 0;
     text-align: center;
@@ -202,21 +195,13 @@
   .title-page-container h2 { font-size: 20pt; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
   .title-page-container p { font-size: 12pt; margin: 10px 0; }
 
-  /* Screenplay Element Formatting */
-  .scene-heading {
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-top: 1.5em;
-    margin-bottom: 1em;
-    letter-spacing: 0.5px;
-  }
+  .scene-heading { font-weight: bold; text-transform: uppercase; margin-top: 1.5em; margin-bottom: 1em; letter-spacing: 0.5px; }
   .action { margin-bottom: 1em; }
   .character { text-transform: uppercase; margin-top: 1.2em; margin-left: 22%; margin-bottom: 0; }
   .parenthetical { margin-left: 15%; margin-right: 35%; margin-bottom: 0; }
   .dialogue { margin-left: 10%; margin-right: 15%; margin-bottom: 1em; }
   .transition { text-transform: uppercase; margin-left: 50%; margin-top: 1.5em; margin-bottom: 1.5em; }
 
-  /* Beat Board Corkboard Grid */
   .corkboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -246,7 +231,6 @@
     min-height: 80px;
   }
 
-  /* Modal Dialogs */
   .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
@@ -290,7 +274,6 @@
   <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
     <h1 id="projectTitleDisplay">🎬 FREE WRITING TOOL PRO</h1>
     
-    <!-- MENUBAR -->
     <div class="menubar">
       <div class="menu-dropdown" id="menuFile">
         <button class="menu-btn" onclick="toggleMenu('menuFile')">File ▾</button>
@@ -350,7 +333,6 @@
 </header>
 
 <div class="container">
-  <!-- SIDEBAR: SCENE INDEX -->
   <aside id="sidebar">
     <h3>Scene Index</h3>
     <ul id="sceneList" class="scene-list"></ul>
@@ -366,7 +348,6 @@
     </div>
   </aside>
 
-  <!-- SCRIPT EDITOR TAB -->
   <div id="scriptView" class="editor-view">
     <div class="toolbar">
       <label style="font-size:0.85rem; color:#aaa;">Element:</label>
@@ -379,10 +360,9 @@
         <option value="transition">Transition (Ctrl+6)</option>
       </select>
       <button onclick="addBlock()">+ Insert Block</button>
-      <span class="shortcut-legend"><b>Tab</b>: Format | <b>Enter</b>: New Page/Line</span>
+      <span class="shortcut-legend"><b>Tab</b>: Format | <b>Enter</b>: Next Block</span>
     </div>
     
-    <!-- MULTI-PAGE WORKSPACE CONTAINER -->
     <div id="scriptContainerWrapper">
       <div id="titlePageSheet" class="script-page">
         <div id="titlePageBlock" class="title-page-container script-block" contenteditable="true" data-bid="title-block">
@@ -397,14 +377,12 @@
     </div>
   </div>
 
-  <!-- BEAT BOARD TAB -->
   <div id="beatboardView" class="beatboard-view hidden">
     <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Visual Beat Board / Corkboard</h2>
     <p style="font-size:0.85rem; color:#aaa; margin-top:0;">Manage your scene outlines and story beats visually below. Notes persist automatically.</p>
     <div id="corkboardGrid" class="corkboard-grid"></div>
   </div>
 
-  <!-- ANALYTICS TAB -->
   <div id="analyticsView" class="analytics-view hidden">
     <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Script Analytics & Breakdown</h2>
     <div class="stat-card">
@@ -422,7 +400,6 @@
     </table>
   </div>
 
-  <!-- BUDGET TAB -->
   <div id="budgetView" class="budget-view hidden">
     <h2 style="margin-top:0; font-size:1.2rem; color:#ff9900;">Line-Item Production Budget</h2>
     <table id="budgetTable">
@@ -458,9 +435,10 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   const elementOrder = ['action', 'character', 'parenthetical', 'dialogue', 'scene-heading', 'transition'];
-  const STORAGE_KEY = 'free_writing_tool_pro_v5';
+  const STORAGE_KEY = 'free_writing_tool_pro_v6';
   let showSceneNumbersEnabled = false;
   let blockCounter = 1;
+  let reflowTimer = null;
 
   window.addEventListener('DOMContentLoaded', () => {
     loadSavedScript();
@@ -504,7 +482,7 @@
     if (newName) {
       document.getElementById('projectTitleDisplay').innerText = '🎬 ' + newName.toUpperCase();
       autoSave();
-      checkPageOverflow();
+      debouncedReflow();
     }
   }
 
@@ -519,7 +497,7 @@
         let firstPage = document.querySelector('#scriptPagesContainer .script-page');
         if (firstPage) firstPage.appendChild(div);
       }
-      checkPageOverflow();
+      debouncedReflow();
       focusDiv(div);
       autoSave();
     }
@@ -639,7 +617,7 @@
     div.addEventListener('input', () => {
       autoSave();
       updateSceneIndex();
-      checkPageOverflow();
+      debouncedReflow();
     });
     return div;
   }
@@ -660,7 +638,7 @@
       firstPage.appendChild(newDiv);
     }
 
-    checkPageOverflow();
+    debouncedReflow();
     focusDiv(newDiv);
     updateSceneIndex();
     autoSave();
@@ -738,7 +716,14 @@
     return page;
   }
 
-  // Incremental, Non-Destructive Pagination Loop (Keeps Cursor Focus Stable)
+  // Debounced Reflow to prevent typing stutter or focus loss
+  function debouncedReflow() {
+    clearTimeout(reflowTimer);
+    reflowTimer = setTimeout(() => {
+      checkPageOverflow();
+    }, 300);
+  }
+
   function checkPageOverflow() {
     const container = document.getElementById('scriptPagesContainer');
     if (!container) return;
@@ -750,9 +735,9 @@
       pages = [p];
     }
 
-    const maxHeight = 750; // Printable height threshold in pixels
+    const maxHeight = 760; 
 
-    // 1. Push overflow blocks down to subsequent pages
+    // 1. Push overflow blocks down
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       while (page.scrollHeight > maxHeight && page.children.length > 1) {
@@ -776,15 +761,14 @@
         const firstBlockOfNext = nextPage.firstElementChild;
         page.appendChild(firstBlockOfNext);
         if (page.scrollHeight <= maxHeight) {
-          // Fits cleanly
+          // Fits
         } else {
-          // Put it back
           nextPage.insertBefore(firstBlockOfNext, nextPage.firstChild);
         }
       }
     }
 
-    // 3. Clean up empty trailing pages
+    // 3. Clean up empty pages
     pages = Array.from(container.querySelectorAll('.script-page'));
     for (let i = 1; i < pages.length; i++) {
       if (pages[i].children.length === 0) {
@@ -792,7 +776,7 @@
       }
     }
 
-    // 4. Update Running Headers dynamically
+    // 4. Update Running Headers
     Array.from(container.querySelectorAll('.script-page')).forEach((p, idx) => {
       const pageNum = idx + 1;
       const scriptTitle = document.getElementById('projectTitleDisplay').innerText.replace('🎬 ', '');
@@ -876,7 +860,7 @@
           div.addEventListener('input', () => {
             autoSave();
             updateSceneIndex();
-            checkPageOverflow();
+            debouncedReflow();
           });
           firstPage.appendChild(div);
         });
@@ -1122,7 +1106,7 @@
         focusDiv(prevBlock);
         updateSceneIndex();
         autoSave();
-        checkPageOverflow();
+        debouncedReflow();
         return;
       }
     }
@@ -1170,7 +1154,7 @@
 
       const newDiv = createBlockElement(nextType, nextType === 'scene-heading' ? 'INT. ' : '');
       activeLine.after(newDiv);
-      checkPageOverflow();
+      debouncedReflow();
       focusDiv(newDiv);
       updateSceneIndex();
       autoSave();
